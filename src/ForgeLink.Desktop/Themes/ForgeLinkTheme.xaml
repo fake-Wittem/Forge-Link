@@ -11,6 +11,7 @@
     <SolidColorBrush x:Key="ForgeMutedBrush" Color="#64748B" />
     <SolidColorBrush x:Key="ForgeSuccessBrush" Color="#059669" />
     <SolidColorBrush x:Key="ForgeWarningBrush" Color="#D97706" />
+    <SolidColorBrush x:Key="ForgeDangerBrush" Color="#DC2626" />
     <Thickness x:Key="PagePadding">28</Thickness>
     <Style TargetType="{x:Type controls:ForgeComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}" />
     <Style x:Key="PageTitleStyle" TargetType="TextBlock">
@@ -22,4 +23,141 @@
         <Setter Property="Foreground" Value="{StaticResource ForgeMutedBrush}" />
         <Setter Property="FontSize" Value="13" />
     </Style>
+    <Style x:Key="ForgeNavigationListStyle" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style x:Key="ForgeNavigationItemStyle" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="#475569" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Margin" Value="0,2" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="MenuItemBorder" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="MenuItemBorder" Property="Background" Value="#EFF6FF" /></Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter TargetName="MenuItemBorder" Property="Background" Value="#DBEAFE" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="ForgeTableSurfaceStyle" TargetType="Border">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderBrush" Value="#E2E8F0" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+    <Style x:Key="ForgeDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="#F8FAFC" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="BorderBrush" Value="#E2E8F0" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Height" Value="42" />
+    </Style>
+    <Style x:Key="ForgeDataGridCellStyle" TargetType="DataGridCell">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="BorderBrush" Value="#EEF2F7" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="TextBlock.TextAlignment" Value="Center" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    </Style>
+    <Style x:Key="ForgeTableTextStyle" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style x:Key="ForgeTableSwitchStyle" TargetType="CheckBox">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid Width="36" Height="20">
+                        <Border x:Name="SwitchTrack" Background="#CBD5E1" CornerRadius="10" />
+                        <Ellipse x:Name="SwitchThumb" Width="16" Height="16" Margin="2" Fill="White" HorizontalAlignment="Left">
+                            <Ellipse.Effect>
+                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Opacity="0.18" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="SwitchTrack" Property="Background" Value="{StaticResource ForgePrimaryBrush}" />
+                            <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="ForgeDataGridRowStyle" TargetType="DataGridRow">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="MinHeight" Value="42" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Style.Triggers>
+            <Trigger Property="AlternationIndex" Value="1"><Setter Property="Background" Value="#FBFDFF" /></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#F1F5F9" /></Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#E8F1FF" />
+                <Setter Property="Foreground" Value="#1D4ED8" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="ForgeTopTableStyle" TargetType="DataGrid">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource ForgeDataGridColumnHeaderStyle}" />
+        <Setter Property="CellStyle" Value="{StaticResource ForgeDataGridCellStyle}" />
+        <Setter Property="RowStyle" Value="{StaticResource ForgeDataGridRowStyle}" />
+        <Setter Property="AlternationCount" Value="2" />
+        <Setter Property="RowHeaderWidth" Value="0" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="GridLinesVisibility" Value="None" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="SelectionUnit" Value="FullRow" />
+        <Setter Property="SelectionMode" Value="Single" />
+        <Setter Property="CanUserAddRows" Value="False" />
+        <Setter Property="CanUserDeleteRows" Value="False" />
+        <Setter Property="CanUserReorderColumns" Value="False" />
+        <Setter Property="MinHeight" Value="42" />
+        <Setter Property="MaxHeight" Value="520" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+    <Style TargetType="DataGrid" BasedOn="{StaticResource ForgeTopTableStyle}" />
 </ResourceDictionary>

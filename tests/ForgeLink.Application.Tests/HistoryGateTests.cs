@@ -1,5 +1,5 @@
 // 文件说明：验证历史门禁状态机与启用约束。
-// 责任边界：使用内存桩通道，不访问真实 InfluxDB。
+// 责任边界：使用内存桩通道，不访问真实 TDengine。
 
 using ForgeLink.Application;
 using ForgeLink.Domain;
@@ -43,6 +43,20 @@ public sealed class HistoryGateTests
         await gate.TestAsync(CancellationToken.None);
         gate.Enable();
         gate.MarkConfigurationChanged();
+        Assert.Equal(HistoryGateState.Disabled, gate.State);
+        Assert.False(gate.CanWrite);
+    }
+
+    /// <summary>确认服务重启可以恢复同一配置已持久化的显式启用状态。</summary>
+    [Fact]
+    public void Restore_ShouldHonorPersistedTestAndEnableState()
+    {
+        HistoryGate gate = new(new StubHistoryChannel(true));
+        gate.Restore(true, true, true);
+        Assert.Equal(HistoryGateState.Enabled, gate.State);
+        Assert.True(gate.CanWrite);
+
+        gate.Restore(true, false, true);
         Assert.Equal(HistoryGateState.Disabled, gate.State);
         Assert.False(gate.CanWrite);
     }

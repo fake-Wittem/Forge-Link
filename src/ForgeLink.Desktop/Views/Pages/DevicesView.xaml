@@ -1,0 +1,31 @@
+<!-- 文件说明：设备管理独立页面。责任边界：只呈现设备列表、命令和设备编辑器。 -->
+<UserControl x:Class="ForgeLink.Desktop.Views.Pages.DevicesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:editors="clr-namespace:ForgeLink.Desktop.Views.Editors">
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <StackPanel><TextBlock Text="设备管理" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="配置保存后由 Collector Service 安全热加载" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12"><ui:Button Content="新增设备" Command="{Binding NewDeviceCommand}" Appearance="Primary" Margin="0,0,8,0" /><ui:Button Content="编辑" Command="{Binding EditDeviceCommand}" Margin="0,0,8,0" /><ui:Button Content="连接测试" Command="{Binding TestDeviceCommand}" Margin="0,0,8,0" /><ui:Button Content="删除" Command="{Binding RequestDeleteDeviceCommand}" /></StackPanel>
+        <ui:InfoBar Grid.Row="2" Margin="0,0,0,12" Title="配置操作" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" />
+        <Grid Grid.Row="3" VerticalAlignment="Stretch">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Style="{StaticResource ForgeTableSurfaceStyle}" Margin="0,0,12,0">
+                <DataGrid ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="设备名称" Binding="{Binding Name}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                        <DataGridTextColumn Header="协议" Binding="{Binding Protocol}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="地址" Binding="{Binding Host}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                        <DataGridTextColumn Header="端口" Binding="{Binding Port}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="Unit ID" Binding="{Binding UnitId}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridCheckBoxColumn Header="启用" Binding="{Binding IsEnabled}" ElementStyle="{StaticResource ForgeTableSwitchStyle}" Width="*" />
+                        <DataGridTextColumn Header="周期 (ms)" Binding="{Binding DefaultScanIntervalMs}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <editors:DeviceEditorView Grid.Column="1" VerticalAlignment="Top" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}" />
+            <Border Grid.ColumnSpan="2" VerticalAlignment="Bottom" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="8" Padding="14" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock Text="确认删除选中的设备？存在关联点位时服务端会拒绝删除。" VerticalAlignment="Center" /><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeleteDeviceCommand}" Margin="12,0,8,0" /><ui:Button Content="确认删除" Command="{Binding ConfirmDeleteDeviceCommand}" Appearance="Primary" /></StackPanel></DockPanel></Border>
+        </Grid>
+    </Grid>
+</UserControl>

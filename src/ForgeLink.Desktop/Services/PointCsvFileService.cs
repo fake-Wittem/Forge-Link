@@ -7,7 +7,7 @@ using System.IO;
 namespace ForgeLink.Desktop.Services;
 
 /// <summary>使用 Windows 文件选择器导入和导出点位配置文件。</summary>
-public sealed class PointCsvFileService
+public sealed class PointCsvFileService : IPointCsvFileService
 {
     /// <summary>选择保存位置并写入服务端导出的 CSV 字节。</summary>
     /// <returns>用户完成保存时返回 true，取消时返回 false。</returns>

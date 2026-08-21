@@ -33,6 +33,36 @@ public interface IConfigurationRepository
     /// <summary>删除指定点位。</summary>
     /// <returns>找到并删除时返回 true，否则返回 false。</returns>
     Task<bool> DeletePointAsync(Guid pointId, CancellationToken cancellationToken);
+
+    /// <summary>读取 TDengine 连接配置；未配置时返回 null。</summary>
+    Task<TDengineConnectionConfiguration?> GetTDengineConfigurationAsync(CancellationToken cancellationToken);
+
+    /// <summary>保存 TDengine 连接配置并清除先前的测试及启用状态。</summary>
+    Task SaveTDengineConfigurationAsync(TDengineConnectionConfiguration configuration, CancellationToken cancellationToken);
+
+    /// <summary>持久化最近一次完整测试结果和用户启用状态。</summary>
+    Task SetHistoryGateStateAsync(bool testPassed, bool isEnabled, CancellationToken cancellationToken);
+}
+
+/// <summary>表示不依赖特定客户端库的 TDengine WebSocket 连接配置。</summary>
+public sealed record TDengineConnectionConfiguration(
+    string Host,
+    int Port,
+    string Username,
+    string Password,
+    string Database,
+    bool UseSsl,
+    bool EnableCompression,
+    bool AutoReconnect,
+    int RequestTimeoutMs,
+    bool TestPassed = false,
+    bool IsEnabled = false);
+
+/// <summary>保护配置库中的敏感连接凭据。</summary>
+public interface ISecretProtector
+{
+    byte[] Protect(string plaintext);
+    string Unprotect(byte[] protectedPayload);
 }
 
 /// <summary>通知采集运行时重新加载已提交的配置。</summary>

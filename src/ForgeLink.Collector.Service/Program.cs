@@ -39,19 +39,28 @@ string dataRoot = builder.Configuration["ForgeLink:DataRoot"]
     ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "ForgeLink");
 string configDatabase = Path.Combine(dataRoot, "config", "forgelink-config.db");
 
-builder.Services.AddSingleton<IConfigurationRepository>(_ => new SqliteConfigurationRepository(configDatabase));
+builder.Services.AddSingleton<ISecretProtector, WindowsDpapiSecretProtector>();
+builder.Services.AddSingleton<IConfigurationRepository>(services =>
+    new SqliteConfigurationRepository(configDatabase, services.GetRequiredService<ISecretProtector>()));
 builder.Services.AddSingleton<RealtimeValueStore>();
 builder.Services.AddSingleton<ICollectorMetrics, CollectorMetrics>();
 builder.Services.AddSingleton<IConfigurationChangeSignal, ConfigurationChangeSignal>();
 builder.Services.AddSingleton<IPlcDriverFactory, PlcDriverFactory>();
 builder.Services.AddSingleton<DeviceConnectionTester>();
 builder.Services.AddSingleton<PointCsvCodec>();
-builder.Services.AddSingleton<IHistoryChannel, DisabledHistoryChannel>();
+builder.Services.AddSingleton<DisabledHistoryChannel>();
+builder.Services.AddSingleton(services => new SwitchableHistoryChannel(services.GetRequiredService<DisabledHistoryChannel>()));
+builder.Services.AddSingleton<IHistoryChannel>(services => services.GetRequiredService<SwitchableHistoryChannel>());
 builder.Services.AddSingleton<HistoryGate>();
+builder.Services.AddSingleton<HistoryRecordPolicy>();
+builder.Services.AddSingleton<HistoryBuffer>();
+builder.Services.AddSingleton<HistoryConfigurationManager>();
 builder.Services.AddHostedService<CollectionWorker>();
+builder.Services.AddHostedService<HistoryWriter>();
 builder.Services.AddHealthChecks();
 
 WebApplication app = builder.Build();
+await app.Services.GetRequiredService<HistoryConfigurationManager>().InitializeAsync(CancellationToken.None);
 app.MapHealthChecks("/health");
 app.MapGet("/api/v1/status", (RealtimeValueStore store, ICollectorMetrics metrics, HistoryGate history) =>
     Results.Ok(metrics.CreateSnapshot(store.Count, history.State.ToString())));
@@ -167,11 +176,68 @@ app.MapPost("/api/v1/points/import", async (HttpRequest request, IConfigurationR
     return Results.Ok(new { importedCount = parsed.Points.Count });
 });
 app.MapGet("/api/v1/realtime", (RealtimeValueStore store) => Results.Ok(store.Snapshot()));
-app.MapGet("/api/v1/history/status", (HistoryGate history) => Results.Ok(new { state = history.State.ToString(), history.CanWrite }));
-app.MapGet("/api/v1/history/query", () => Results.Problem(
-    title: "历史存储未启用",
-    detail: "请先配置并完整测试 InfluxDB；ForgeLink 不会回退到 SQLite。",
-    statusCode: StatusCodes.Status409Conflict));
+app.MapGet("/api/v1/history/status", (HistoryGate history, HistoryBuffer buffer) =>
+{
+    HistoryBufferSnapshot snapshot = buffer.Snapshot();
+    return Results.Ok(new
+    {
+        state = history.State.ToString(),
+        history.CanWrite,
+        snapshot.BufferedCount,
+        snapshot.DroppedCount,
+        snapshot.GapFromUtc,
+        snapshot.GapToUtc
+    });
+});
+app.MapGet("/api/v1/history/configuration", async (HistoryConfigurationManager manager, CancellationToken cancellationToken) =>
+    Results.Ok(await manager.GetAsync(cancellationToken)));
+app.MapPut("/api/v1/history/configuration", async (HistoryConfigurationRequest request, HistoryConfigurationManager manager, CancellationToken cancellationToken) =>
+{
+    (HistoryConfigurationResponse? response, IReadOnlyList<string> errors) = await manager.SaveAsync(request, cancellationToken);
+    return errors.Count > 0 ? Results.ValidationProblem(CreateValidationErrors(errors)) : Results.Ok(response);
+});
+app.MapPost("/api/v1/history/test", async (HistoryConfigurationManager manager, CancellationToken cancellationToken) =>
+{
+    using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+    timeout.CancelAfter(TimeSpan.FromSeconds(120));
+    HistoryOperationResponse response = await manager.TestAsync(timeout.Token);
+    return response.Succeeded ? Results.Ok(response) : Results.UnprocessableEntity(response);
+});
+app.MapPost("/api/v1/history/enable", async (HistoryConfigurationManager manager, CancellationToken cancellationToken) =>
+{
+    HistoryOperationResponse response = await manager.EnableAsync(cancellationToken);
+    return response.Succeeded ? Results.Ok(response) : Results.Conflict(response);
+});
+app.MapPost("/api/v1/history/disable", async (HistoryConfigurationManager manager, CancellationToken cancellationToken) =>
+{
+    HistoryOperationResponse response = await manager.DisableAsync(cancellationToken);
+    return response.Succeeded ? Results.Ok(response) : Results.Conflict(response);
+});
+app.MapGet("/api/v1/history/query", async (
+    string pointIds,
+    DateTimeOffset fromUtc,
+    DateTimeOffset toUtc,
+    int maxPoints,
+    HistoryGate history,
+    IHistoryChannel channel,
+    CancellationToken cancellationToken) =>
+{
+    if (!history.CanWrite)
+        return Results.Problem(title: "历史存储未启用", detail: "请先配置、完整测试并启用 TDengine。", statusCode: StatusCodes.Status409Conflict);
+    Guid[] ids = pointIds.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(static text => Guid.TryParse(text, out Guid id) ? id : Guid.Empty).ToArray();
+    if (ids.Length is < 1 or > 100 || ids.Contains(Guid.Empty))
+        return Results.ValidationProblem(CreateValidationErrors(["历史查询必须包含 1 到 100 个有效点位 ID。"]));
+    if (fromUtc > toUtc || toUtc - fromUtc > TimeSpan.FromDays(7))
+        return Results.ValidationProblem(CreateValidationErrors(["历史查询时间范围必须有效且不得超过 7 天。"]));
+    if (maxPoints is < 1 or > 100_000)
+        return Results.ValidationProblem(CreateValidationErrors(["历史查询最大点数必须在 1 到 100000 之间。"]));
+
+    HistoryQueryResult result = await channel.QueryAsync(new(ids, fromUtc.ToUniversalTime(), toUtc.ToUniversalTime(), maxPoints), cancellationToken);
+    return string.IsNullOrWhiteSpace(result.Error)
+        ? Results.Ok(result.Values)
+        : Results.Problem(title: "TDengine 历史查询失败", detail: result.Error, statusCode: StatusCodes.Status502BadGateway);
+});
 
 await app.RunAsync();
 

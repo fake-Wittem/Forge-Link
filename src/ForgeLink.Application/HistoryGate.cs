@@ -9,15 +9,26 @@ namespace ForgeLink.Application;
 public sealed class HistoryGate(IHistoryChannel channel)
 {
     private readonly SemaphoreSlim _stateLock = new(1, 1);
+    private int _state = (int)HistoryGateState.NotConfigured;
 
     /// <summary>获取当前历史门禁状态。</summary>
-    public HistoryGateState State { get; private set; } = HistoryGateState.NotConfigured;
+    public HistoryGateState State => (HistoryGateState)Volatile.Read(ref _state);
 
     /// <summary>把完整配置置为待测试的禁用状态。</summary>
-    public void MarkConfigured() => State = HistoryGateState.Disabled;
+    public void MarkConfigured() => SetState(HistoryGateState.Disabled);
 
     /// <summary>连接参数变化后关闭通道并要求重新测试。</summary>
-    public void MarkConfigurationChanged() => State = HistoryGateState.Disabled;
+    public void MarkConfigurationChanged() => SetState(HistoryGateState.Disabled);
+
+    /// <summary>服务启动时从已持久化的测试和启用状态恢复门禁。</summary>
+    public void Restore(bool isConfigured, bool testPassed, bool isEnabled)
+    {
+        SetState(!isConfigured
+            ? HistoryGateState.NotConfigured
+            : testPassed
+                ? isEnabled ? HistoryGateState.Enabled : HistoryGateState.Ready
+                : HistoryGateState.Disabled);
+    }
 
     /// <summary>执行通道测试并更新门禁状态。</summary>
     public async Task<HistoryChannelTestResult> TestAsync(CancellationToken cancellationToken)
@@ -25,9 +36,9 @@ public sealed class HistoryGate(IHistoryChannel channel)
         await _stateLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            State = HistoryGateState.Testing;
+            SetState(HistoryGateState.Testing);
             HistoryChannelTestResult result = await channel.TestAsync(cancellationToken).ConfigureAwait(false);
-            State = result.Succeeded ? HistoryGateState.Ready : HistoryGateState.Failed;
+            SetState(result.Succeeded ? HistoryGateState.Ready : HistoryGateState.Failed);
             return result;
         }
         finally
@@ -41,12 +52,26 @@ public sealed class HistoryGate(IHistoryChannel channel)
     public void Enable()
     {
         if (State != HistoryGateState.Ready) throw new InvalidOperationException("历史通道必须先通过完整连接测试。");
-        State = HistoryGateState.Enabled;
+        SetState(HistoryGateState.Enabled);
     }
 
     /// <summary>显式关闭历史通道且不积累待补写数据。</summary>
-    public void Disable() => State = HistoryGateState.Disabled;
+    public void Disable() => SetState(HistoryGateState.Disabled);
+
+    /// <summary>运行写入失败后进入降级状态并继续允许有界缓冲。</summary>
+    public void MarkDegraded()
+    {
+        Interlocked.CompareExchange(ref _state, (int)HistoryGateState.Degraded, (int)HistoryGateState.Enabled);
+    }
+
+    /// <summary>降级后的首次成功写入恢复启用状态。</summary>
+    public void MarkRecovered()
+    {
+        Interlocked.CompareExchange(ref _state, (int)HistoryGateState.Enabled, (int)HistoryGateState.Degraded);
+    }
 
     /// <summary>判断当前值是否可以提交给历史通道。</summary>
     public bool CanWrite => State is HistoryGateState.Enabled or HistoryGateState.Degraded;
+
+    private void SetState(HistoryGateState state) => Volatile.Write(ref _state, (int)state);
 }

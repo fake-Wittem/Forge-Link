@@ -1,0 +1,51 @@
+<!-- 文件说明：TDengine 历史连接、测试和启停设置页面。责任边界：只绑定设置 ViewModel。 -->
+<UserControl x:Class="ForgeLink.Desktop.Views.Pages.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="{StaticResource PagePadding}" MaxWidth="920" HorizontalAlignment="Left">
+            <TextBlock Text="系统设置" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock Text="TDengine 3.x 历史通道仅由 Collector Service 管理；密码不会回传桌面端。" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" />
+            <ui:InfoBar Title="历史门禁状态" Message="{Binding State}" Severity="Informational" IsOpen="True" Margin="0,0,0,12" />
+            <ui:InfoBar Title="配置操作" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" Margin="0,0,0,12" />
+            <ui:Card Padding="24">
+                <StackPanel>
+                    <TextBlock Text="TDengine WebSocket 连接" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="180" /></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="主机" Style="{StaticResource MutedTextStyle}" /><ui:TextBox Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,12" /></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Text="WebSocket 端口" Style="{StaticResource MutedTextStyle}" /><ui:TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,12" /></StackPanel>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,6,0"><TextBlock Text="用户名" Style="{StaticResource MutedTextStyle}" /><ui:TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,12" /></StackPanel>
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0"><TextBlock Text="Database" Style="{StaticResource MutedTextStyle}" /><ui:TextBox Text="{Binding Database, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,12" /></StackPanel>
+                    </Grid>
+                    <TextBlock Text="密码" Style="{StaticResource MutedTextStyle}" />
+                    <ui:PasswordBox Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" RevealButtonEnabled="True" Margin="0,5,0,4" />
+                    <TextBlock Text="{Binding PasswordHint}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,0,0,12" />
+                    <TextBlock Text="请求超时（秒）" Style="{StaticResource MutedTextStyle}" />
+                    <ui:TextBox Text="{Binding RequestTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" Width="180" HorizontalAlignment="Left" Margin="0,5,0,16" />
+                    <WrapPanel Margin="0,0,0,18">
+                        <ui:ToggleSwitch Content="TLS" IsChecked="{Binding UseSsl}" Margin="0,0,24,8" />
+                        <ui:ToggleSwitch Content="WebSocket 压缩" IsChecked="{Binding EnableCompression}" Margin="0,0,24,8" />
+                        <ui:ToggleSwitch Content="自动重连" IsChecked="{Binding AutoReconnect}" Margin="0,0,24,8" />
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button Content="保存配置" Command="{Binding SaveCommand}" Appearance="Primary" Margin="0,0,8,0" />
+                        <ui:Button Content="完整连接测试" Command="{Binding TestCommand}" Margin="0,0,8,0" />
+                        <ui:Button Content="启用历史" Command="{Binding EnableCommand}" IsEnabled="{Binding CanEnable}" Margin="0,0,8,0" />
+                        <ui:Button Content="关闭历史" Command="{Binding DisableCommand}" IsEnabled="{Binding CanDisable}" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+            <ui:Card Padding="20" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="安全与数据边界" FontWeight="SemiBold" />
+                    <TextBlock Text="密码由 Collector Service 使用 Windows DPAPI 本机范围加密，并依赖配置目录 ACL 防止其他本机账户读取。配置变化后必须重新完成建表、写入、查询和清理测试。历史未启用时不保存、不排队，也不会在以后补写；SQLite 永不保存点位历史。" TextWrapping="Wrap" Margin="0,8,0,0" />
+                </StackPanel>
+            </ui:Card>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
