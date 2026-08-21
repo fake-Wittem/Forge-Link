@@ -6,7 +6,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:converters="clr-namespace:ForgeLink.Desktop.Converters"
+             xmlns:pages="clr-namespace:ForgeLink.Desktop.Views.Pages"
+             xmlns:pageModels="clr-namespace:ForgeLink.Desktop.ViewModels.Pages">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -14,6 +16,16 @@
                 <ui:ControlsDictionary />
                 <ResourceDictionary Source="Themes/ForgeLinkTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BooleanVisibility" />
+            <converters:StringToVisibilityConverter x:Key="StringVisibility" />
+            <DataTemplate DataType="{x:Type pageModels:OverviewViewModel}"><pages:OverviewView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:DevicesViewModel}"><pages:DevicesView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:PointsViewModel}"><pages:PointsView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:RealtimeViewModel}"><pages:RealtimeView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:HistoryViewModel}"><pages:HistoryView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:TransportViewModel}"><pages:TransportView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:AlarmsViewModel}"><pages:AlarmsView /></DataTemplate>
+            <DataTemplate DataType="{x:Type pageModels:SettingsViewModel}"><pages:SettingsView /></DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

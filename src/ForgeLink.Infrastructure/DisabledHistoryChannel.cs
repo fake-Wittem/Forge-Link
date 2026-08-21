@@ -6,7 +6,7 @@ using ForgeLink.History.Abstractions;
 
 namespace ForgeLink.Infrastructure;
 
-/// <summary>在未配置 InfluxDB 时提供明确且安全的历史行为。</summary>
+/// <summary>在未配置 TDengine 时提供明确且安全的历史行为。</summary>
 public sealed class DisabledHistoryChannel : IHistoryChannel
 {
     private const string Message = "历史存储未配置或未启用。";

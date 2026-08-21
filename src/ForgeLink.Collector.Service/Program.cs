@@ -170,7 +170,7 @@ app.MapGet("/api/v1/realtime", (RealtimeValueStore store) => Results.Ok(store.Sn
 app.MapGet("/api/v1/history/status", (HistoryGate history) => Results.Ok(new { state = history.State.ToString(), history.CanWrite }));
 app.MapGet("/api/v1/history/query", () => Results.Problem(
     title: "历史存储未启用",
-    detail: "请先配置并完整测试 InfluxDB；ForgeLink 不会回退到 SQLite。",
+    detail: "请先配置并完整测试 TDengine；ForgeLink 不会回退到 SQLite。",
     statusCode: StatusCodes.Status409Conflict));
 
 await app.RunAsync();

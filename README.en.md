@@ -10,9 +10,10 @@ ForgeLink is a PLC data collection and forwarding system for Windows x64 industr
 - Protocol-neutral `IPlcDriver`, `IHistoryChannel`, and configuration repository contracts;
 - Asynchronous bounded-channel collection pipeline and thread-safe real-time cache;
 - Versioned SQLite initialization for configuration data only;
-- InfluxDB history gate, disabled by default with no SQLite fallback;
-- An InfluxDB 3.x foundation adapter using the official `InfluxDB3.Client`, including batch writes and SQL queries;
+- TDengine history gate, disabled by default with no SQLite fallback;
+- A TDengine 3.x WebSocket foundation adapter using the official `TDengine.Connector` 3.2.1, with typed supertables, batch writes, and SQL queries;
 - Light WPF UI theme, shared design tokens, and virtualized data grids;
+- A shell with eight independent menu views, typed navigation, and page-scoped refresh lifecycles;
 - Local health, status, device, point, and real-time value APIs;
 - A simulated PLC driver for end-to-end demos without field equipment.
 - An NModbus-based Modbus TCP driver with address areas, contiguous batch reads, Unit ID, timeouts, and register ordering;
@@ -59,6 +60,8 @@ The second command starts the Collector Service in the background, waits for its
 - `ForgeLink__DataRoot` selects the development data directory;
 - `%ProgramData%\ForgeLink` is used when no override is supplied;
 - First startup seeds one de-identified simulated device and three demo points.
+- The local TDengine development baseline is Enterprise 3.4.2.6 at `D:\TDengine`, using WebSocket `127.0.0.1:6041`; the connector does not depend on native DLLs from that directory;
+- See the [TDengine configuration guide](./docs/tdengine.md) for compatibility and integration requirements.
 
 ## Data and security boundaries
 
@@ -71,9 +74,9 @@ The second command starts the Collector Service in the background, waits for its
 
 ## Development and testing
 
-`ForgeLink.slnx` is the solution entry point. The verification gate restores dependencies, builds with warnings as errors, checks formatting, and runs xUnit tests. Current automated coverage includes engineering conversion, configuration validation, history gating, hot-reload signaling, CSV handling, protected deletion, and batch transaction rollback.
+`ForgeLink.slnx` is the solution entry point. The verification gate restores dependencies, builds with warnings as errors, checks formatting, and runs xUnit tests. Current automated coverage includes engineering conversion, configuration validation, history gating, hot-reload signaling, CSV handling, protected deletion, batch transaction rollback, typed desktop navigation, and device/point editors.
 
-Real PLCs, InfluxDB 3, REST/MQTT, Windows Service behavior, installers/upgrades, and 72-hour stability require dedicated integration environments. The InfluxDB 3 adapter is not yet connected to DPAPI-backed configuration, the collection pipeline, or the desktop history page.
+Real PLCs, TDengine 3.x, REST/MQTT, Windows Service behavior, installers/upgrades, and 72-hour stability require dedicated integration environments. The TDengine adapter is not yet connected to DPAPI-backed configuration, the collection pipeline, or the desktop history page.
 
 ## License and contributing
 

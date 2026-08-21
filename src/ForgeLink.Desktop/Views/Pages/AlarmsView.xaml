@@ -1,0 +1,2 @@
+<!-- 文件说明：告警事件独立页面占位。责任边界：后续只承载告警与缺口事件。 -->
+<UserControl x:Class="ForgeLink.Desktop.Views.Pages.AlarmsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"><StackPanel Margin="{StaticResource PagePadding}"><TextBlock Text="告警与事件" Style="{StaticResource PageTitleStyle}" /><ui:Card Margin="0,20,0,0" Padding="24"><TextBlock Text="当前无活动告警。设备离线、采集失败、历史缺口和队列积压将在此统一呈现。" TextWrapping="Wrap" /></ui:Card></StackPanel></UserControl>

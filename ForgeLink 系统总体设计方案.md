@@ -11,8 +11,9 @@
 | 主要开发语言 | C# |
 | 目标框架 | .NET 10 LTS |
 | 本地配置数据库 | SQLite |
-| 点位历史数据库 | 用户自行部署的 InfluxDB 3.x |
-| 进度更新时间 | 2026-08-20 |
+| 点位历史数据库 | 用户自行部署的 TDengine 3.x |
+| 当前联调基线 | TDengine 3.4.2.6 Enterprise，Windows EXE，`D:\TDengine`，WebSocket `127.0.0.1:6041` |
+| 进度更新时间 | 2026-08-21 |
 
 本文描述 ForgeLink 的产品边界、总体架构、核心模块、数据存储、外部接口、可靠性、安全、部署和验收要求。Visual Studio 安装不属于本文范围，参见独立文档《Visual Studio 2026 安装指导》。
 
@@ -23,13 +24,13 @@
 - `[ ]`：尚未实施；
 - `[!]`：已确认范围调整，不再按原方案实施。
 
-静态检查、模拟器测试和本机进程冒烟不等同于真实 PLC、InfluxDB 或生产环境验收。各阶段明细统一维护在第 23 节。
+静态检查、模拟器测试和本机进程冒烟不等同于真实 PLC、TDengine 或生产环境验收。各阶段明细统一维护在第 23 节。
 
 ### 已确认的实施基线调整
 
 1. Desktop 与 Collector Service 仅使用 Windows 命名管道 `ForgeLink.Collector` 通信；ASP.NET Core Minimal API 路由语义保留在管道之上，不再监听 `127.0.0.1:5088` TCP 端口；
 2. 首批 PLC 协议只实现 Modbus TCP，具体 PLC 型号待定；协议报文使用 NModbus，不手写原生 Modbus TCP 驱动；
-3. 历史数据库只实现 InfluxDB 3.x，使用官方推荐的 `InfluxDB3.Client`；InfluxDB 2.x、Organization、Bucket 和 Flux 不进入首版范围；
+3. 历史数据库由原 InfluxDB 3.x 方案调整为只实现 TDengine 3.x，使用官方 `TDengine.Connector` 3.2.1 和 WebSocket 连接；本机基线为 3.4.2.6 Enterprise Windows 安装版，部署目录 `D:\TDengine`；原 InfluxDB 适配器、依赖及专用概念已移除；
 4. 当前配置访问直接使用 `Microsoft.Data.Sqlite` 参数化 SQL，未引入 Dapper；
 5. 当前测试使用 xUnit，未引入 FluentAssertions 和 NSubstitute；需要时再评估，避免无实际用途的依赖。
 
@@ -37,7 +38,7 @@
 
 ForgeLink 是一套以 C# 为主的轻量级 PLC 数据采集系统，用于连接工业现场的 PLC、仪表或 OPC Server，读取寄存器及变量数据，完成数据解析、质量判断、工程值换算和字段映射，并将数据可靠地传输给 MES、SCADA、数据平台或其他外部系统。
 
-系统以单机部署为第一目标，安装后不要求用户手动配置 .NET Runtime、SQLite、Docker、Java、Node.js 或其他运行环境。InfluxDB 作为可选的外部历史数据库，由用户自行安装和维护；未配置并启用 InfluxDB 时，ForgeLink 不保存点位采集历史值。
+系统以单机部署为第一目标，安装后不要求用户手动配置 .NET Runtime、SQLite、Docker、Java、Node.js 或其他运行环境。TDengine 作为可选的外部历史数据库，由用户自行安装和维护；未配置并启用 TDengine 时，ForgeLink 不保存点位采集历史值。ForgeLink 客户端固定使用 WebSocket，不要求工控机安装 TDengine Native 客户端驱动。
 
 ## 2. 建设目标
 
@@ -49,7 +50,7 @@ ForgeLink 是一套以 C# 为主的轻量级 PLC 数据采集系统，用于连�
 - 支持数值缩放、偏移、字节序和字序处理；
 - 支持实时数据向外部系统转发；
 - 支持 REST 和 MQTT 输出通道；
-- 支持可选 InfluxDB 历史写入和历史查询；
+- 支持可选 TDengine 历史写入和历史查询；
 - 支持断线重连、失败重试、状态监控和诊断导出；
 - 支持 Windows Service 后台运行；
 - 支持图形化桌面管理和监控。
@@ -68,13 +69,13 @@ ForgeLink 是一套以 C# 为主的轻量级 PLC 数据采集系统，用于连�
 
 首版不以以下能力为建设目标：
 
-- 不内置或静默安装 InfluxDB Server；
+- 不内置或静默安装 TDengine Server 或 taosAdapter；
 - 不建设中心化多租户云平台；
 - 不替代完整 SCADA 或 MES；
 - 不默认提供 PLC 编程和复杂控制逻辑；
 - 不默认直接写入外部业务数据库；
 - 不使用 SQLite 保存点位采集历史；
-- 不保证 InfluxDB 长时间离线时历史数据零丢失；
+- 不保证 TDengine 长时间离线时历史数据零丢失；
 - 不默认支持跨操作系统桌面客户端。
 
 ## 3. 核心设计原则
@@ -83,7 +84,7 @@ ForgeLink 是一套以 C# 为主的轻量级 PLC 数据采集系统，用于连�
 2. 协议实现与业务逻辑分离；
 3. 实时处理、历史存储和外部传输相互解耦；
 4. SQLite 仅承担本地管理数据，不承担历史时序存储；
-5. InfluxDB 未配置、未验证或未启用时不保存历史；
+5. TDengine 未配置、未验证或未启用时不保存历史；
 6. 外部通道失败不能阻塞 PLC 采集线程；
 7. 所有高频处理使用异步、有界队列和批量操作；
 8. 采集失败不能被伪装成数值零；
@@ -107,7 +108,7 @@ flowchart LR
     Pipeline --> HistoryGate["历史存储门禁"]
     Pipeline --> Outbox["外部传输 Outbox"]
 
-    HistoryGate --> Influx["用户部署的 InfluxDB"]
+    HistoryGate --> TDengine["用户部署的 TDengine 3.x / taosAdapter"]
     Outbox --> REST["REST 输出"]
     Outbox --> MQTT["MQTT 输出"]
     REST --> External["MES / SCADA / 数据平台"]
@@ -125,7 +126,7 @@ Windows Service，负责：
 - 数据类型解析和工程值换算；
 - 实时值内存缓存；
 - 告警规则计算；
-- InfluxDB 历史写入和查询代理；
+- TDengine 历史写入和查询代理；
 - 外部消息生成和转发；
 - 日志、指标和健康状态；
 - 向桌面端提供本机管理接口。
@@ -140,12 +141,12 @@ WPF 桌面程序，负责：
 - 设备和点位配置；
 - 实时值监控；
 - 历史趋势查询；
-- InfluxDB 和外部通道配置；
+- TDengine 和外部通道配置；
 - 告警、事件、队列和日志查看；
 - 诊断包导出；
 - 启停采集组及受控管理操作。
 
-Desktop 不直接连接 PLC、不直接访问 InfluxDB，也不直接写入 SQLite。所有操作通过 Collector Service 完成。
+Desktop 不直接连接 PLC、不直接访问 TDengine，也不直接写入 SQLite。所有操作通过 Collector Service 完成。
 
 ### 5.3 ForgeLink DriverHost
 
@@ -171,7 +172,7 @@ DriverHost 通过本机 IPC 与 Collector Service 通信。单个驱动进程故
 | 高并发管道 | System.Threading.Channels |
 | HTTP 接口 | ASP.NET Core Minimal API |
 | MQTT | MQTTnet |
-| InfluxDB 3.x | InfluxDB3.Client |
+| TDengine 3.x | TDengine.Connector 3.2.1（WebSocket） |
 | 日志 | Microsoft.Extensions.Logging、Serilog |
 | 可观测性 | Health Checks、OpenTelemetry |
 | 图表 | LiveCharts2 或 ScottPlot，实施阶段压测选定 |
@@ -186,7 +187,7 @@ DriverHost 通过本机 IPC 与 Collector Service 通信。单个驱动进程故
 - PLC 总数、在线数和异常数；
 - 启用点位数和采集成功率；
 - 每秒采集值数量；
-- InfluxDB 状态；
+- TDengine 状态；
 - 外部转发状态；
 - 队列积压；
 - 最近告警；
@@ -244,14 +245,14 @@ DriverHost 通过本机 IPC 与 Collector Service 通信。单个驱动进程故
 
 ### 7.5 历史趋势
 
-- 从 Collector Service 查询 InfluxDB；
+- 从 Collector Service 查询 TDengine；
 - 按设备、点位和时间范围查询；
 - 多点位曲线对比；
 - 自动降采样；
 - 显示数据质量和缺口；
 - 查询取消和超时；
 - CSV 导出；
-- InfluxDB 不可用时明确提示，不回退 SQLite。
+- TDengine 不可用时明确提示，不回退 SQLite。
 
 ### 7.6 外部转发
 
@@ -271,7 +272,7 @@ DriverHost 通过本机 IPC 与 Collector Service 通信。单个驱动进程故
 - 采集超时；
 - 数值越限；
 - 数据长期未更新；
-- InfluxDB 写入故障；
+- TDengine 写入故障；
 - 外部传输持续失败；
 - 内存历史队列溢出；
 - Outbox 积压；
@@ -382,7 +383,7 @@ SequenceNumber
 SQLite 只保存：
 
 - 设备、点位和采集组配置；
-- InfluxDB 连接配置和门禁状态；
+- TDengine 连接配置和门禁状态；
 - 外部通道和字段映射；
 - 告警规则；
 - 系统设置；
@@ -396,9 +397,9 @@ SQLite 不保存：
 
 - 点位采集历史；
 - 历史分钟、小时或日汇总；
-- InfluxDB 查询结果缓存；
-- InfluxDB 未启用期间的待补写历史；
-- InfluxDB 故障期间的持久化历史缓冲。
+- TDengine 查询结果缓存；
+- TDengine 未启用期间的待补写历史；
+- TDengine 故障期间的持久化历史缓冲。
 
 ### 10.2 数据库文件
 
@@ -422,18 +423,18 @@ C:\ProgramData\ForgeLink\
 
 如果未来提出“任何采集值均不得出现在 SQLite 文件”的安全要求，应将 Outbox 调整为内存或独立文件队列。
 
-## 11. InfluxDB 历史通道
+## 11. TDengine 历史通道
 
 ### 11.1 定位
 
-- InfluxDB 是唯一点位历史数据库；
-- 用户自行部署和维护 InfluxDB；
-- ForgeLink 安装包不包含 InfluxDB；
+- TDengine 是唯一点位历史数据库；
+- 用户自行部署和维护 TDengine 3.x 及其 WebSocket 接入服务 taosAdapter；
+- ForgeLink 安装包不包含 TDengine 或 taosAdapter；
 - 未配置、未验证或未启用时不保存历史；
-- InfluxDB 故障时不回退 SQLite；
+- TDengine 故障时不回退 SQLite；
 - 历史查询由 Collector Service 代理。
 
-### 11.2 InfluxDB 3.x 适配
+### 11.2 TDengine 3.x 适配
 
 ```csharp
 public interface IHistoryChannel
@@ -455,18 +456,29 @@ public interface IHistoryChannel
 
 ```text
 DisabledHistoryChannel
-InfluxDb3HistoryChannel
+TDengineHistoryChannel
 ```
 
-首版仅支持 InfluxDB 3.x，连接参数为 URL、Token 和 Database。业务层只依赖 `IHistoryChannel`，不得引入 InfluxDB 3 客户端专用类型。
+首版仅支持 TDengine 3.x，固定通过官方连接器的 WebSocket 模式访问 taosAdapter，不实现 Native 连接。业务层只依赖 `IHistoryChannel`，不得引入 TDengine 客户端专用类型。
+
+版本兼容策略：
+
+- `3.3.6.0` 及以上：使用 C# Connector `3.1.7` 及以上时属于官方 WebSocket 兼容保证范围；当前固定 Connector `3.2.1`；
+- `3.0.0.0` 至 `3.3.5.x`：只使用 3.0 已具备的超级表、子表、基础 INSERT/SELECT 等能力，作为尽力兼容范围；每个目标版本必须完成建表、批量写入和查询验收后才能启用；
+- 低于 `3.0.0.0`、无法识别版本或读写测试失败：历史门禁拒绝启用；
+- 不使用 BLOB、DECIMAL、虚拟表、Adapter HA 自动发现等较新版本特性作为首版依赖；
+- 当前本机 TDengine `3.4.2.6.enterprise` 位于官方保证范围内。
 
 ### 11.3 配置项
 
 通用配置：
 
-- 服务 URL；
-- API Token；
-- TLS 证书验证；
+- WebSocket 主机或多地址列表；
+- WebSocket 端口，默认 `6041`；
+- 用户名和密码；
+- Database；
+- TLS 开关和证书验证；
+- WebSocket 压缩和自动重连；
 - 请求超时；
 - 批量写入条数；
 - 批量刷新间隔；
@@ -475,9 +487,9 @@ InfluxDb3HistoryChannel
 - 查询最大时间范围；
 - 全局历史存储开关。
 
-- Database。
+当前本机开发基线为 `Host=127.0.0.1`、`Port=6041`、`UseSsl=false`；TDengine 安装目录只用于运维诊断，不写入连接字符串，也不得形成对 `D:\TDengine` 的运行时文件依赖。
 
-Token 使用 Windows DPAPI 加密，不允许出现在普通日志、诊断包或明文配置导出中。
+密码使用 Windows DPAPI 加密，不允许出现在普通日志、诊断包或明文配置导出中。连接器 3.2.1 支持多地址故障转移，但首版不依赖 3.2.2 才新增的 taosAdapter HA 自动发现。
 
 ### 11.4 门禁状态
 
@@ -498,18 +510,18 @@ stateDiagram-v2
 
 连接测试必须验证：
 
-1. URL 和连接类型有效；
+1. 主机、端口和 WebSocket 连接类型有效；
 2. 网络可达；
 3. TLS 验证通过；
-4. Token 认证成功；
+4. 用户名和密码认证成功；
 5. Database 存在；
-6. Token 具有写权限；
-7. Token 具有查询权限；
-8. 测试点写入成功；
-9. 测试点查询成功；
-10. 服务端版本与所选适配器兼容。
+6. 账号具有创建超级表和子表的权限；
+7. 账号具有写入和查询权限；
+8. 测试子表和测试点写入成功；
+9. 测试点查询成功且测试子表可清理；
+10. 服务端版本与所选连接器兼容。
 
-只有全部通过后才允许启用。服务器地址、Token、Database 或 TLS 配置变化后，自动关闭历史通道并要求重新测试。
+只有全部通过后才允许启用。服务器地址、端口、账号、Database 或 TLS 配置变化后，自动关闭历史通道并要求重新测试。
 
 ### 11.5 未启用时的行为
 
@@ -524,7 +536,7 @@ stateDiagram-v2
 
 ### 11.6 故障缓冲
 
-InfluxDB 临时不可用时采用有界内存缓冲，不进行本地持久化：
+TDengine 临时不可用时采用有界内存缓冲，不进行本地持久化：
 
 | 参数 | 默认值 |
 | --- | ---: |
@@ -563,7 +575,7 @@ InfluxDB 临时不可用时采用有界内存缓冲，不进行本地持久化�
 
 ```text
 全局历史存储已启用
-AND InfluxDB 通道可写
+AND TDengine 通道可写
 AND 点位启用了历史记录
 AND 当前值符合记录模式
 AND 当前数据质量符合保存规则
@@ -571,9 +583,9 @@ AND 当前数据质量符合保存规则
 
 默认建议采用“超过死区时记录，并每 60 秒至少记录一次心跳值”。异常质量值默认保存，以反映断线、超时和数据无效区间。
 
-### 11.8 Measurement 设计
+### 11.8 超级表和子表设计
 
-为避免同一 Field 在不同点位产生类型冲突，按值类型划分 Measurement：
+为避免不同数据类型共享列时发生类型冲突，按值类型划分五个超级表：
 
 ```text
 plc_numeric
@@ -583,21 +595,21 @@ plc_text
 plc_event
 ```
 
-建议 Tags：
+每个点位在每种值类型下使用一个确定性子表，例如 `plc_numeric_{pointId:N}`。子表 Tags：
 
 ```text
 instance_id
-site_id
 device_id
 point_id
-protocol
 ```
 
-建议 Fields：
+数据列：
 
 ```text
 value
 raw_value
+data_type
+unit
 quality
 source_timestamp
 collect_timestamp
@@ -606,12 +618,14 @@ sequence_number
 
 约束：
 
-- Point 时间戳默认使用 UTC 采集时间；
+- 主时间戳 `ts` 使用 UTC 采集时间的 Unix 毫秒值；
 - PLC 源时间作为独立字段保存；
 - `point_id` 使用不可变稳定 ID；
 - 点位显示名称不作为唯一标识；
-- `quality` 使用 Field，不使用 Tag；
-- 避免把频繁变化或高基数的内容随意设计为 Tag。
+- `instance_id`、`device_id`、`point_id` 只作为子表 Tags，不随采样变化；
+- `quality`、`unit` 和 `data_type` 作为数据列，异常且无值的记录进入 `plc_event`，不得伪造为零；
+- 写入按最多 1,000 条分批，同一子表的多行在一个 INSERT 段中合并；
+- SQL 标识符只允许内部生成或通过白名单校验，字符串字面量统一转义。
 
 ## 12. 外部系统传输
 
@@ -695,6 +709,17 @@ sequence_number
 关于与诊断
 ```
 
+桌面端采用“应用壳层 + 独立页面 + 页面 ViewModel”结构：
+
+- `MainWindow` 只负责标题栏、一级菜单、服务状态和当前内容宿主；
+- 一级菜单使用强类型 `AppRoute`，不得使用页面名称字符串和成组 `Visibility` 切换；
+- 每个菜单页面使用独立 `UserControl` 和 ViewModel，并通过 DataTemplate 映射；
+- 设备和点位编辑器使用独立 View 和编辑器 ViewModel；
+- 页面通过 `INavigationAware` 接收进入和离开事件，离开实时页面时必须停止刷新；
+- 系统状态由单一共享监视器刷新，设备和点位进入页面时加载，历史数据按用户查询加载；
+- 页面只依赖 `ICollectorApiClient`，不得直接连接 PLC、TDengine 或 SQLite；
+- 当前阶段保持单一 `ForgeLink.Desktop` 项目，只有出现跨应用复用需求时才拆分独立控件程序集。
+
 ### 13.3 性能要求
 
 - UI 不直接消费每一个采集事件；
@@ -729,7 +754,7 @@ sequence_number
 - 设备连接日志；
 - 采集日志；
 - 数据转换日志；
-- InfluxDB 写入和查询日志；
+- TDengine 写入和查询日志；
 - 外部传输日志；
 - 用户操作审计；
 - 安装和升级日志。
@@ -742,8 +767,8 @@ sequence_number
 每秒采集值数量
 平均和最大采集耗时
 点位数据延迟
-InfluxDB 写入成功率
-InfluxDB 内存缓冲长度
+TDengine 写入成功率
+TDengine 内存缓冲长度
 历史丢弃数量
 历史缺口范围
 Outbox 积压数量
@@ -763,7 +788,7 @@ CPU 和内存使用率
 - 配置摘要；
 - 最近日志；
 - 设备状态；
-- InfluxDB 状态；
+- TDengine 状态；
 - 外部通道状态；
 - 队列状态；
 - 网络测试结果。
@@ -852,7 +877,7 @@ NT SERVICE\ForgeLinkCollector
 - 默认保留配置、日志和备份；
 - 彻底删除数据必须由用户单独确认；
 - 卸载 ForgeLink 不卸载共享的 .NET Runtime；
-- 不修改或删除用户的 InfluxDB。
+- 不修改或删除用户的 TDengine 服务及非 ForgeLink 数据。
 
 ## 18. 配置、备份与升级
 
@@ -869,7 +894,7 @@ NT SERVICE\ForgeLinkCollector
 
 ## 19. 解决方案结构
 
-截至 2026-08-20，实际解决方案结构如下；尚未创建的模块不预先放置空项目：
+截至 2026-08-21，实际解决方案结构如下；尚未创建的模块不预先放置空项目：
 
 ```text
 ForgeLink.slnx
@@ -881,14 +906,15 @@ ForgeLink.slnx
 │  ├─ ForgeLink.Infrastructure
 │  ├─ ForgeLink.Persistence.Sqlite
 │  ├─ ForgeLink.History.Abstractions
-│  ├─ ForgeLink.History.InfluxDb3
+│  ├─ ForgeLink.History.TDengine
 │  ├─ ForgeLink.Collector.Service
 │  └─ ForgeLink.Desktop
 ├─ tests
 │  ├─ ForgeLink.Domain.Tests
 │  ├─ ForgeLink.Application.Tests
 │  ├─ ForgeLink.Protocol.Tests
-│  └─ ForgeLink.History.Tests
+│  ├─ ForgeLink.History.Tests
+│  └─ ForgeLink.Desktop.Tests
 ├─ docs
 └─ tools
 ```
@@ -921,7 +947,7 @@ PLC 协议驱动
 工程值转换器
 质量判断器
 历史记录策略
-InfluxDB 历史通道
+TDengine 历史通道
 REST/MQTT 输出通道
 字段映射器
 重试策略
@@ -1022,8 +1048,8 @@ public Task<IReadOnlyList<TagValue>> CollectAsync(
 - SQLite 访问统一通过持久化层，不允许 UI 或协议驱动直接执行 SQL；
 - 所有 SQL 使用参数化查询；
 - 数据库结构变更必须提供版本化迁移；
-- InfluxDB 3.x 客户端类型和 SQL 查询细节只存在于历史适配器内部；
-- PLC、InfluxDB、REST 和 MQTT 调用必须设置超时；
+- TDengine 客户端类型和 SQL 查询细节只存在于历史适配器内部；
+- PLC、TDengine、REST 和 MQTT 调用必须设置超时；
 - 重试仅用于可恢复错误，不对认证失败和参数错误无限重试；
 - 批量写入和发送必须返回明确的成功数量、失败数量和错误原因；
 - 外部请求必须携带可追踪的请求 ID 或消息 ID；
@@ -1037,7 +1063,7 @@ public Task<IReadOnlyList<TagValue>> CollectAsync(
 - 提交前必须完成格式检查、编译、静态分析和相关测试；
 - 编译警告不得被无理由全局屏蔽；
 - 对确需抑制的警告，应在最小范围内添加中文原因说明；
-- 不得把静态检查描述为真实 PLC、InfluxDB 或外部系统的生产验证。
+- 不得把静态检查描述为真实 PLC、TDengine 或外部系统的生产验证。
 
 ### 20.8 Git 与远程仓库文档规范
 
@@ -1102,7 +1128,7 @@ README.en.md    # 英文版本
 
 - Modbus、OPC UA 和 S7 模拟服务；
 - SQLite 迁移；
-- InfluxDB 3.x 写入和查询；
+- TDengine 3.x WebSocket 写入和查询；
 - REST 和 MQTT；
 - Windows Service 启停；
 - Desktop 与 Service IPC；
@@ -1113,8 +1139,8 @@ README.en.md    # 英文版本
 - PLC 断网和恢复；
 - PLC 响应缓慢；
 - 无效寄存器地址；
-- InfluxDB 断开；
-- InfluxDB Token 过期；
+- TDengine/taosAdapter 断开；
+- TDengine 密码失效或权限被收回；
 - 历史内存缓冲溢出；
 - 外部 API 持续失败；
 - MQTT Broker 断开；
@@ -1131,7 +1157,7 @@ README.en.md    # 英文版本
 - 检查重连风暴；
 - 检查日志和 Outbox 增长；
 - 检查 UI 长时间运行后的响应性；
-- 检查 InfluxDB 历史缺口记录。
+- 检查 TDengine 历史缺口记录。
 
 ## 22. 性能基线
 
@@ -1143,21 +1169,24 @@ README.en.md    # 英文版本
 | 启用点位 | 500 点以内 |
 | 最快采集周期 | 1 秒 |
 | UI 实时刷新 | 1 秒或更慢 |
-| InfluxDB 默认批量 | 1,000 个值 |
+| TDengine 默认批量 | 1,000 个值 |
 | 外部转发 | 批量异步发送 |
 | 连续运行 | 72 小时无不可恢复故障 |
 
-该基线不是硬编码上限。超过基线时必须以目标工控机、真实协议和实际 InfluxDB 环境进行压测。
+该基线不是硬编码上限。超过基线时必须以目标工控机、真实协议和实际 TDengine 环境进行压测。
 
 ## 23. 实施阶段与当前进度
 
-当前总体状态：阶段一开发骨架基本完成，阶段二代码实现完成但待真实 PLC 验收，阶段三已完成 3.x 基础适配器但尚未接入运行配置和采集管道，阶段四、五尚未进入实施。
+当前总体状态：阶段一开发骨架基本完成，阶段二代码实现完成但待真实 PLC 验收，阶段三已从 InfluxDB 调整为 TDengine 并完成 3.x WebSocket 基础适配器，但尚未接入运行配置和采集管道，阶段四、五尚未进入实施。
 
 ### 阶段一：基础骨架（基本完成）
 
 - [x] `.slnx` 分层解决方案及依赖方向；
 - [x] 独立 Collector Service 和 Hosted Service 采集任务；
 - [x] WPF UI 主框架、统一主题资源和 MVVM；
+- [x] 主窗口壳层、8 个独立菜单页面、强类型导航和页面进入/离开生命周期；
+- [x] 设备/点位独立编辑器 ViewModel、共享状态监视器和按页面刷新；
+- [x] 8 个菜单 UI Automation 切换冒烟及桌面导航/编辑器单元测试；
 - [x] SQLite 配置库、版本 3 迁移和参数化访问；
 - [x] Desktop 与 Service 命名管道 IPC；已执行服务端 HTTP/1.1 健康探针进程冒烟；
 - [x] 健康检查、状态指标和基础结构化日志；
@@ -1177,20 +1206,21 @@ README.en.md    # 英文版本
 - [x] 本机 NModbus TCP 从站集成测试；
 - [~] 具体型号 PLC 现场连接、地址表数据对照、断网恢复和持续运行验收；型号待用户确认。
 
-### 阶段三：InfluxDB 3.x 历史（部分完成）
+### 阶段三：TDengine 3.x 历史（部分完成）
 
 - [x] `IHistoryChannel` 抽象、默认禁用通道和门禁状态机；
-- [x] `ForgeLink.History.InfluxDb3` 独立项目及 `InfluxDB3.Client` 1.9.0 引用；
-- [x] InfluxDB 3 参数校验、批量 `PointData` 写入和 SQL 查询适配；
-- [x] 按数值、整数、布尔、文本、事件拆分 Measurement，异常空值不伪造为零；
-- [x] 完整连接测试代码：服务版本、认证、Database、测试点写入和 SQL 回读；
-- [x] 3.x 映射和配置的无服务器单元测试；
-- [!] InfluxDB 2.x 适配器取消，不属于首版范围；
-- [ ] DPAPI Token 加密、SQLite 连接配置和配置变更后重新测试；
-- [ ] 将 3.x 通道接入 Collector Service、历史记录策略和全局启用门禁；
+- [!] 原 InfluxDB 3.x 方案已取消，项目、客户端依赖、测试和专用产品文案均已删除；
+- [x] `ForgeLink.History.TDengine` 独立项目及官方 `TDengine.Connector` 3.2.1 引用；
+- [x] 固定使用 WebSocket，支持主机/端口/账号/Database、TLS、压缩和自动重连参数；
+- [x] 按数值、整数、布尔、文本、事件拆分超级表，每个点位使用确定性子表，异常空值不伪造为零；
+- [x] 最多 1,000 条分批写入、同子表多行合并、受控 SQL 转义和跨超级表查询；
+- [x] 完整连接测试代码：服务版本、认证、Database、建表、测试点写入、回读和测试表清理；
+- [x] 配置、映射、schema、SQL 转义、批量合并及查询边界的无服务器单元测试；
+- [ ] DPAPI 密码加密、SQLite 连接配置和配置变更后重新测试；
+- [ ] 将 TDengine 通道接入 Collector Service、历史记录策略和全局启用门禁；
 - [ ] 有界内存缓冲、重试恢复、缺口计数和告警；
 - [ ] 历史查询 API、趋势图和查询范围限制；
-- [~] 真实 InfluxDB 3 服务的 TLS、Token、Database、批量写入和查询联调；当前无可用目标服务器。
+- [~] 已确认本机 TDengine 3.4.2.6 Enterprise、taosAdapter 3.4.2.6 和 WebSocket 6041 正常运行；尚缺 ForgeLink 专用 Database 与账号凭据，未执行真实建表、批量写入和查询验收。
 
 ### 阶段四：外部传输（未开始）
 
@@ -1209,10 +1239,10 @@ README.en.md    # 英文版本
 
 ### 下一阶段执行顺序
 
-1. 完成 InfluxDB 3 Token 的 DPAPI 保护和配置持久化；
-2. 增加 Desktop 的 InfluxDB 3 配置、测试、启用和禁用页面；
-3. 把历史记录策略、有界内存缓冲和 3.x 批量写入接入采集管道；
-4. 在用户提供 InfluxDB 3 测试环境后执行真实读写查询验收；
+1. 用户提供 ForgeLink 专用 Database、用户名和密码后，执行本机 TDengine 3.4.2.6 建表、批量写入、查询和清理验收；
+2. 增加 Desktop 的 TDengine 3.x 配置、测试、启用和禁用页面；
+3. 把历史记录策略、有界内存缓冲和 TDengine 批量写入接入采集管道；
+4. 在用户提供 TDengine 3.x/taosAdapter 测试环境后执行真实读写查询验收；
 5. PLC 型号和地址表明确后执行阶段二现场验收。
 
 ## 24. 验收标准
@@ -1235,11 +1265,11 @@ README.en.md    # 英文版本
 
 ### 24.3 历史验收
 
-- 未配置 InfluxDB 时 SQLite 中不存在点位历史；
+- 未配置 TDengine 时 SQLite 中不存在点位历史；
 - 未通过连接测试时不能启用历史；
 - 未启用时不产生待补写历史；
-- InfluxDB 启用后可以批量写入和查询；
-- InfluxDB 故障时不回退 SQLite；
+- TDengine 启用后可以批量写入和查询；
+- TDengine 故障时不回退 SQLite；
 - 缓冲溢出时记录丢弃数量和缺口；
 - 修改连接参数后自动关闭历史并要求重新测试。
 
@@ -1265,7 +1295,8 @@ README.en.md    # 英文版本
 | --- | --- |
 | 目标平台 | Windows x64 |
 | 本地数据库 | SQLite |
-| 历史数据库 | InfluxDB，可选且默认关闭 |
+| 历史数据库 | TDengine 3.x，可选且默认关闭；当前本机基线 3.4.2.6 |
+| TDengine 连接 | WebSocket，`127.0.0.1:6041`，SSL 默认关闭 |
 | 历史故障缓冲 | 有界内存，不持久化 |
 | 原始历史模式 | 死区变化 + 60 秒心跳 |
 | PLC 写入 | 关闭 |
@@ -1282,12 +1313,12 @@ README.en.md    # 英文版本
 | --- | --- |
 | 厂商 SDK 仅支持 x86 或旧框架 | 使用独立 DriverHost 隔离 |
 | 不同 PLC 地址和字节序差异 | 驱动适配器与模拟测试 |
-| InfluxDB 3 产品形态和服务版本差异 | 使用官方 3.x 客户端并在目标环境执行读写查询验收 |
-| InfluxDB 长时间故障导致历史丢失 | 有界缓冲、缺口告警；未来可选持久化队列 |
+| TDengine 服务版本、taosAdapter 和部署形态差异 | 使用官方 WebSocket 连接器并在目标环境执行建表、读写和查询验收 |
+| TDengine 长时间故障导致历史丢失 | 有界缓冲、缺口告警；未来可选持久化队列 |
 | 高频点位导致 UI 卡顿 | UI 抽样、虚拟化和批量刷新 |
 | 外部系统不支持幂等 | 提供消息 ID，并推动接收方去重 |
 | 工厂网络无法联网安装 Runtime | 提供包含 Runtime 的离线安装包 |
-| Token 或证书泄露 | DPAPI、ACL、日志脱敏 |
+| 密码、Token 或证书泄露 | DPAPI、ACL、日志脱敏 |
 | SQLite Outbox 持续增长 | 容量阈值、告警、死信和清理策略 |
 
 ## 27. 官方技术参考
@@ -1297,7 +1328,8 @@ README.en.md    # 英文版本
 - [.NET Worker Service](https://learn.microsoft.com/dotnet/core/extensions/workers)
 - [在 Windows Service 中托管 ASP.NET Core](https://learn.microsoft.com/aspnet/core/host-and-deploy/windows-service)
 - [Windows 安装 .NET](https://learn.microsoft.com/dotnet/core/install/windows)
-- [InfluxDB 3 C# Client](https://docs.influxdata.com/influxdb3/core/reference/client-libraries/v3/csharp/)
+- [TDengine Client Libraries](https://docs.tdengine.com/developer-guide/connectors-reference/)
+- [TDengine.Connector 源码](https://github.com/taosdata/taos-connector-dotnet)
 - [OPC UA .NET Standard](https://github.com/OPCFoundation/UA-.NETStandard)
 - [MQTTnet](https://github.com/dotnet/MQTTnet)
 - [NModbus](https://github.com/NModbus/NModbus)

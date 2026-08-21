@@ -1,0 +1,9 @@
+<!-- 文件说明：实时值页面。责任边界：仅呈现页面激活期间取得的快照。 -->
+<UserControl x:Class="ForgeLink.Desktop.Views.Pages.RealtimeView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <StackPanel><TextBlock Text="实时数据" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="仅在当前页面激活时每秒批量刷新" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
+        <ui:InfoBar Grid.Row="1" Margin="0,0,0,12" Title="刷新失败" Message="{Binding ErrorMessage}" Severity="Warning" IsOpen="{Binding ErrorMessage, Converter={StaticResource StringVisibility}}" />
+        <ui:Card Grid.Row="2" Padding="12"><DataGrid ItemsSource="{Binding Values}" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0" EnableRowVirtualization="True"><DataGrid.Columns><DataGridTextColumn Header="点位 ID" Binding="{Binding PointId}" Width="2*" /><DataGridTextColumn Header="工程值" Binding="{Binding EngineeringValue}" Width="*" /><DataGridTextColumn Header="单位" Binding="{Binding Unit}" Width="*" /><DataGridTextColumn Header="质量" Binding="{Binding Quality}" Width="*" /><DataGridTextColumn Header="采集时间(UTC)" Binding="{Binding CollectTimestampUtc}" Width="2*" /><DataGridTextColumn Header="序号" Binding="{Binding SequenceNumber}" Width="*" /></DataGrid.Columns></DataGrid></ui:Card>
+    </Grid>
+</UserControl>

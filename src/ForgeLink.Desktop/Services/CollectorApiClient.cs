@@ -1,5 +1,5 @@
 // 文件说明：封装桌面端对 Collector Service 本机管理 API 的访问。
-// 责任边界：桌面端不得绕过此服务直连 PLC、InfluxDB 或 SQLite。
+// 责任边界：桌面端不得绕过此服务直连 PLC、TDengine 或 SQLite。
 
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -13,7 +13,7 @@ using ForgeLink.Domain;
 namespace ForgeLink.Desktop.Services;
 
 /// <summary>提供可取消、带超时的本机服务查询。</summary>
-public sealed class CollectorApiClient : IDisposable
+public sealed class CollectorApiClient : ICollectorApiClient, IDisposable
 {
     private const string DefaultPipeName = "ForgeLink.Collector";
     private readonly HttpClient _client;

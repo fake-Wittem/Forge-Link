@@ -1,5 +1,5 @@
 # 文件说明：执行 ForgeLink 的还原、编译、格式和单元测试质量门禁。
-# 责任边界：不连接真实 PLC、InfluxDB、MQTT Broker 或外部 REST 系统。
+# 责任边界：不连接真实 PLC、TDengine、MQTT Broker 或外部 REST 系统。
 
 [CmdletBinding()]
 param()

@@ -1,5 +1,5 @@
 // 文件说明：验证历史门禁状态机与启用约束。
-// 责任边界：使用内存桩通道，不访问真实 InfluxDB。
+// 责任边界：使用内存桩通道，不访问真实 TDengine。
 
 using ForgeLink.Application;
 using ForgeLink.Domain;
