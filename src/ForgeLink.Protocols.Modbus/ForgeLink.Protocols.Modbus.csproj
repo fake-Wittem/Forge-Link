@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ForgeLink.Protocols.Abstractions/ForgeLink.Protocols.Abstractions.csproj" />
+    <PackageReference Include="NModbus" />
+  </ItemGroup>
+</Project>

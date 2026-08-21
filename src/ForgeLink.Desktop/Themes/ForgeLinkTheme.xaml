@@ -1,0 +1,25 @@
+<!--
+  文件说明：集中定义 ForgeLink 桌面端的颜色、间距与文字样式。
+  责任边界：业务页面不得复制这些设计令牌。
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:ForgeLink.Desktop.Controls">
+    <Color x:Key="ForgePrimaryColor">#2563EB</Color>
+    <SolidColorBrush x:Key="ForgePrimaryBrush" Color="{StaticResource ForgePrimaryColor}" />
+    <SolidColorBrush x:Key="ForgeCanvasBrush" Color="#F4F7FB" />
+    <SolidColorBrush x:Key="ForgeMutedBrush" Color="#64748B" />
+    <SolidColorBrush x:Key="ForgeSuccessBrush" Color="#059669" />
+    <SolidColorBrush x:Key="ForgeWarningBrush" Color="#D97706" />
+    <Thickness x:Key="PagePadding">28</Thickness>
+    <Style TargetType="{x:Type controls:ForgeComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}" />
+    <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="#0F172A" />
+    </Style>
+    <Style x:Key="MutedTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource ForgeMutedBrush}" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+</ResourceDictionary>

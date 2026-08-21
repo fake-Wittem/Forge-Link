@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ForgeLink.Domain/ForgeLink.Domain.csproj" />
+    <ProjectReference Include="../ForgeLink.History.Abstractions/ForgeLink.History.Abstractions.csproj" />
+    <ProjectReference Include="../ForgeLink.Protocols.Abstractions/ForgeLink.Protocols.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

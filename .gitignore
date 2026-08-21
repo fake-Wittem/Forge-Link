@@ -1,0 +1,36 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+artifacts/
+data/
+local-data/
+uploads/
+backups/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-*
+!src/ForgeLink.Persistence.Sqlite/
+!src/ForgeLink.Persistence.Sqlite/**
+*.log
+diagnostics/
+certificates/
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.Local.json
+appsettings.*.local.json
+
+# Keep build outputs ignored even inside the explicitly restored
+# ForgeLink.Persistence.Sqlite source project directory above.
+bin/
+obj/

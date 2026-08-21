@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ForgeLink.Domain/ForgeLink.Domain.csproj" />
+    <ProjectReference Include="../ForgeLink.History.Abstractions/ForgeLink.History.Abstractions.csproj" />
+    <PackageReference Include="InfluxDB3.Client" />
+  </ItemGroup>
+</Project>

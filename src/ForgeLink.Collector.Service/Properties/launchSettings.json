@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "ForgeLink Collector": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ForgeLink__DataRoot": "data"
+      }
+    }
+  }
+}

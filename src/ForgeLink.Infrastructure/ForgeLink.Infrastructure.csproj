@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ForgeLink.Application/ForgeLink.Application.csproj" />
+    <ProjectReference Include="../ForgeLink.History.Abstractions/ForgeLink.History.Abstractions.csproj" />
+    <ProjectReference Include="../ForgeLink.Protocols.Modbus/ForgeLink.Protocols.Modbus.csproj" />
+  </ItemGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
+</Project>

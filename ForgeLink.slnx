@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ForgeLink.Domain/ForgeLink.Domain.csproj" />
+    <Project Path="src/ForgeLink.Protocols.Abstractions/ForgeLink.Protocols.Abstractions.csproj" />
+    <Project Path="src/ForgeLink.Protocols.Modbus/ForgeLink.Protocols.Modbus.csproj" />
+    <Project Path="src/ForgeLink.History.Abstractions/ForgeLink.History.Abstractions.csproj" />
+    <Project Path="src/ForgeLink.History.InfluxDb3/ForgeLink.History.InfluxDb3.csproj" />
+    <Project Path="src/ForgeLink.Application/ForgeLink.Application.csproj" />
+    <Project Path="src/ForgeLink.Persistence.Sqlite/ForgeLink.Persistence.Sqlite.csproj" />
+    <Project Path="src/ForgeLink.Infrastructure/ForgeLink.Infrastructure.csproj" />
+    <Project Path="src/ForgeLink.Collector.Service/ForgeLink.Collector.Service.csproj" />
+    <Project Path="src/ForgeLink.Desktop/ForgeLink.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ForgeLink.Domain.Tests/ForgeLink.Domain.Tests.csproj" />
+    <Project Path="tests/ForgeLink.Application.Tests/ForgeLink.Application.Tests.csproj" />
+    <Project Path="tests/ForgeLink.Protocol.Tests/ForgeLink.Protocol.Tests.csproj" />
+    <Project Path="tests/ForgeLink.History.Tests/ForgeLink.History.Tests.csproj" />
+  </Folder>
+</Solution>
