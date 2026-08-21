@@ -5,7 +5,5 @@ using ForgeLink.Desktop.Services;
 
 namespace ForgeLink.Desktop.ViewModels.Pages;
 
-public sealed class HistoryViewModel(NotificationService notification) : PageViewModelBase(notification);
 public sealed class TransportViewModel(NotificationService notification) : PageViewModelBase(notification);
 public sealed class AlarmsViewModel(NotificationService notification) : PageViewModelBase(notification);
-public sealed class SettingsViewModel(NotificationService notification) : PageViewModelBase(notification);

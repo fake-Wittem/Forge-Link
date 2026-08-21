@@ -25,10 +25,10 @@ public partial class App : System.Windows.Application
             [AppRoute.Devices] = new DevicesViewModel(apiClient, notifications),
             [AppRoute.Points] = new PointsViewModel(apiClient, csvFiles, notifications),
             [AppRoute.Realtime] = new RealtimeViewModel(apiClient, notifications),
-            [AppRoute.History] = new HistoryViewModel(notifications),
+            [AppRoute.History] = new HistoryViewModel(apiClient, notifications),
             [AppRoute.Transport] = new TransportViewModel(notifications),
             [AppRoute.Alarms] = new AlarmsViewModel(notifications),
-            [AppRoute.Settings] = new SettingsViewModel(notifications)
+            [AppRoute.Settings] = new SettingsViewModel(apiClient, notifications)
         };
         ShellViewModel shell = new(pages, status, notifications, apiClient);
         MainWindow window = new(shell);

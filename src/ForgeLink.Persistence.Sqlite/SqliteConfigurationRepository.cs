@@ -9,25 +9,38 @@ using Microsoft.Data.Sqlite;
 namespace ForgeLink.Persistence.Sqlite;
 
 /// <summary>通过参数化 SQL 持久化 ForgeLink 管理配置。</summary>
-public sealed class SqliteConfigurationRepository(string databasePath) : IConfigurationRepository
+public sealed class SqliteConfigurationRepository : IConfigurationRepository
 {
-    private readonly string _connectionString = new SqliteConnectionStringBuilder
+    private readonly string _databasePath;
+    private readonly ISecretProtector _secretProtector;
+    private readonly string _connectionString;
+
+    /// <summary>创建仅用于不访问敏感配置的仓储实例。</summary>
+    public SqliteConfigurationRepository(string databasePath) : this(databasePath, new UnavailableSecretProtector()) { }
+
+    /// <summary>创建使用指定凭据保护器的配置仓储。</summary>
+    public SqliteConfigurationRepository(string databasePath, ISecretProtector secretProtector)
     {
-        DataSource = databasePath,
-        Mode = SqliteOpenMode.ReadWriteCreate,
-        Cache = SqliteCacheMode.Shared
-    }.ToString();
+        _databasePath = databasePath;
+        _secretProtector = secretProtector ?? throw new ArgumentNullException(nameof(secretProtector));
+        _connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Cache = SqliteCacheMode.Shared
+        }.ToString();
+    }
 
     /// <inheritdoc />
     public async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        string? directory = Path.GetDirectoryName(databasePath);
+        string? directory = Path.GetDirectoryName(_databasePath);
         if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
         await using SqliteConnection connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         const string sql = """
             PRAGMA journal_mode=WAL;
             CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);
-            INSERT INTO schema_version(version) SELECT 3 WHERE NOT EXISTS (SELECT 1 FROM schema_version);
+            INSERT INTO schema_version(version) SELECT 4 WHERE NOT EXISTS (SELECT 1 FROM schema_version);
             CREATE TABLE IF NOT EXISTS devices (
                 id TEXT PRIMARY KEY, name TEXT NOT NULL, protocol TEXT NOT NULL, host TEXT NOT NULL,
                 port INTEGER NOT NULL, is_enabled INTEGER NOT NULL, default_scan_interval_ms INTEGER NOT NULL,
@@ -42,11 +55,19 @@ public sealed class SqliteConfigurationRepository(string databasePath) : IConfig
                 string_length INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(device_id) REFERENCES devices(id));
             CREATE UNIQUE INDEX IF NOT EXISTS ux_points_device_code ON points(device_id, code);
+            CREATE TABLE IF NOT EXISTS tdengine_connection (
+                singleton_id INTEGER PRIMARY KEY CHECK(singleton_id = 1),
+                host TEXT NOT NULL, port INTEGER NOT NULL, username TEXT NOT NULL,
+                password_protected BLOB NOT NULL, database_name TEXT NOT NULL,
+                use_ssl INTEGER NOT NULL, enable_compression INTEGER NOT NULL,
+                auto_reconnect INTEGER NOT NULL, request_timeout_ms INTEGER NOT NULL,
+                test_passed INTEGER NOT NULL DEFAULT 0, is_enabled INTEGER NOT NULL DEFAULT 0);
             """;
         await using SqliteCommand command = connection.CreateCommand();
         command.CommandText = sql;
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         await ApplyVersion3MigrationAsync(connection, cancellationToken).ConfigureAwait(false);
+        await ApplyVersion4MigrationAsync(connection, cancellationToken).ConfigureAwait(false);
         await SeedDemoConfigurationAsync(connection, cancellationToken).ConfigureAwait(false);
     }
 
@@ -179,6 +200,58 @@ public sealed class SqliteConfigurationRepository(string databasePath) : IConfig
         return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 1;
     }
 
+    /// <inheritdoc />
+    public async Task<TDengineConnectionConfiguration?> GetTDengineConfigurationAsync(CancellationToken cancellationToken)
+    {
+        await using SqliteConnection connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT host,port,username,password_protected,database_name,use_ssl,enable_compression,auto_reconnect,request_timeout_ms,test_passed,is_enabled FROM tdengine_connection WHERE singleton_id=1";
+        await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;
+        byte[] protectedPassword = (byte[])reader.GetValue(3);
+        return new(
+            reader.GetString(0), reader.GetInt32(1), reader.GetString(2), _secretProtector.Unprotect(protectedPassword),
+            reader.GetString(4), reader.GetBoolean(5), reader.GetBoolean(6), reader.GetBoolean(7), reader.GetInt32(8),
+            reader.GetBoolean(9), reader.GetBoolean(10));
+    }
+
+    /// <inheritdoc />
+    public async Task SaveTDengineConfigurationAsync(TDengineConnectionConfiguration configuration, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        byte[] protectedPassword = _secretProtector.Protect(configuration.Password);
+        await using SqliteConnection connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO tdengine_connection(singleton_id,host,port,username,password_protected,database_name,use_ssl,enable_compression,auto_reconnect,request_timeout_ms,test_passed,is_enabled)
+            VALUES(1,$host,$port,$username,$password,$database,$ssl,$compression,$reconnect,$timeout,0,0)
+            ON CONFLICT(singleton_id) DO UPDATE SET host=$host,port=$port,username=$username,password_protected=$password,database_name=$database,use_ssl=$ssl,enable_compression=$compression,auto_reconnect=$reconnect,request_timeout_ms=$timeout,test_passed=0,is_enabled=0
+            """;
+        command.Parameters.AddWithValue("$host", configuration.Host);
+        command.Parameters.AddWithValue("$port", configuration.Port);
+        command.Parameters.AddWithValue("$username", configuration.Username);
+        command.Parameters.Add("$password", SqliteType.Blob).Value = protectedPassword;
+        command.Parameters.AddWithValue("$database", configuration.Database);
+        command.Parameters.AddWithValue("$ssl", configuration.UseSsl);
+        command.Parameters.AddWithValue("$compression", configuration.EnableCompression);
+        command.Parameters.AddWithValue("$reconnect", configuration.AutoReconnect);
+        command.Parameters.AddWithValue("$timeout", configuration.RequestTimeoutMs);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task SetHistoryGateStateAsync(bool testPassed, bool isEnabled, CancellationToken cancellationToken)
+    {
+        if (isEnabled && !testPassed) throw new ArgumentException("未通过完整测试时不能持久化启用状态。", nameof(isEnabled));
+        await using SqliteConnection connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "UPDATE tdengine_connection SET test_passed=$tested,is_enabled=$enabled WHERE singleton_id=1";
+        command.Parameters.AddWithValue("$tested", testPassed);
+        command.Parameters.AddWithValue("$enabled", isEnabled);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+            throw new InvalidOperationException("TDengine 连接配置尚未保存。");
+    }
+
     /// <summary>打开已启用外键约束的数据库连接。</summary>
     private async Task<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
     {
@@ -223,6 +296,14 @@ public sealed class SqliteConfigurationRepository(string databasePath) : IConfig
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>把配置库版本提升到包含 TDengine 加密连接配置的版本 4。</summary>
+    private static async Task ApplyVersion4MigrationAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "UPDATE schema_version SET version = 4 WHERE version < 4";
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>通过表结构元数据检查，幂等地增加单个迁移字段。</summary>
     private static async Task AddColumnIfMissingAsync(
         SqliteConnection connection,
@@ -244,5 +325,12 @@ public sealed class SqliteConfigurationRepository(string databasePath) : IConfig
         // 表名、列名和声明均由本类中的固定迁移常量提供，不接收外部输入。
         alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {declaration}";
         await alter.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>阻止没有显式安全实现的调用方意外读写密码。</summary>
+    private sealed class UnavailableSecretProtector : ISecretProtector
+    {
+        public byte[] Protect(string plaintext) => throw new InvalidOperationException("必须配置凭据保护器后才能保存 TDengine 密码。");
+        public string Unprotect(byte[] protectedPayload) => throw new InvalidOperationException("必须配置凭据保护器后才能读取 TDengine 密码。");
     }
 }

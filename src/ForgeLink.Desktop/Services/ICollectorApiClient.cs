@@ -20,4 +20,10 @@ public interface ICollectorApiClient
     Task DeletePointAsync(Guid pointId, CancellationToken cancellationToken);
     Task<byte[]> ExportPointsAsync(CancellationToken cancellationToken);
     Task<int> ImportPointsAsync(string csv, CancellationToken cancellationToken);
+    Task<HistoryConfigurationDto> GetHistoryConfigurationAsync(CancellationToken cancellationToken);
+    Task<HistoryConfigurationDto> SaveHistoryConfigurationAsync(HistoryConfigurationUpdateDto configuration, CancellationToken cancellationToken);
+    Task<HistoryOperationDto> TestHistoryAsync(CancellationToken cancellationToken);
+    Task<HistoryOperationDto> EnableHistoryAsync(CancellationToken cancellationToken);
+    Task<HistoryOperationDto> DisableHistoryAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<PointValue>> QueryHistoryAsync(IReadOnlyList<Guid> pointIds, DateTimeOffset fromUtc, DateTimeOffset toUtc, int maxPoints, CancellationToken cancellationToken);
 }

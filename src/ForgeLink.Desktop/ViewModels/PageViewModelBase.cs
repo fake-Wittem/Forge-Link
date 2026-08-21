@@ -21,13 +21,16 @@ public abstract class PageViewModelBase(NotificationService notification) : Obse
     public virtual Task OnNavigatedFromAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     /// <summary>统一执行页面操作并转换为可展示消息。</summary>
-    protected async Task RunOperationAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default)
+    protected async Task RunOperationAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default,
+        TimeSpan? timeout = null)
     {
         try
         {
-            using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromSeconds(15));
-            await operation(timeout.Token);
+            using CancellationTokenSource timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutSource.CancelAfter(timeout ?? TimeSpan.FromSeconds(15));
+            await operation(timeoutSource.Token);
         }
         catch (CollectorApiException exception)
         {

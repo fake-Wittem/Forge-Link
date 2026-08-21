@@ -7,7 +7,9 @@
   <ItemGroup>
     <ProjectReference Include="../ForgeLink.Application/ForgeLink.Application.csproj" />
     <ProjectReference Include="../ForgeLink.Infrastructure/ForgeLink.Infrastructure.csproj" />
+    <ProjectReference Include="../ForgeLink.History.TDengine/ForgeLink.History.TDengine.csproj" />
     <ProjectReference Include="../ForgeLink.Persistence.Sqlite/ForgeLink.Persistence.Sqlite.csproj" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
   </ItemGroup>
 </Project>

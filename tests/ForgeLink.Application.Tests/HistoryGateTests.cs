@@ -47,6 +47,20 @@ public sealed class HistoryGateTests
         Assert.False(gate.CanWrite);
     }
 
+    /// <summary>确认服务重启可以恢复同一配置已持久化的显式启用状态。</summary>
+    [Fact]
+    public void Restore_ShouldHonorPersistedTestAndEnableState()
+    {
+        HistoryGate gate = new(new StubHistoryChannel(true));
+        gate.Restore(true, true, true);
+        Assert.Equal(HistoryGateState.Enabled, gate.State);
+        Assert.True(gate.CanWrite);
+
+        gate.Restore(true, false, true);
+        Assert.Equal(HistoryGateState.Disabled, gate.State);
+        Assert.False(gate.CanWrite);
+    }
+
     /// <summary>提供可控制测试结果的历史通道桩。</summary>
     private sealed class StubHistoryChannel(bool succeeds) : IHistoryChannel
     {

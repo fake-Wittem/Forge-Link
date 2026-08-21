@@ -17,6 +17,9 @@ public sealed class CollectionWorker(
     RealtimeValueStore realtimeStore,
     ICollectorMetrics metrics,
     IConfigurationChangeSignal configurationChanges,
+    HistoryGate historyGate,
+    HistoryRecordPolicy historyPolicy,
+    HistoryBuffer historyBuffer,
     ILogger<CollectionWorker> logger) : BackgroundService
 {
     private readonly Channel<PointValue> _pipeline = Channel.CreateBounded<PointValue>(new BoundedChannelOptions(4096)
@@ -26,6 +29,8 @@ public sealed class CollectionWorker(
         SingleWriter = true
     });
     private long _sequence;
+    private IReadOnlyDictionary<Guid, PointDefinition> _historyDefinitions = new Dictionary<Guid, PointDefinition>();
+    private int _historyPolicyResetRequested;
 
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -41,6 +46,8 @@ public sealed class CollectionWorker(
                 IReadOnlyList<PointDefinition> points = await repository.GetPointsAsync(stoppingToken).ConfigureAwait(false);
                 DeviceDefinition[] enabledDevices = devices.Where(static device => device.IsEnabled).ToArray();
                 PointDefinition[] enabledPoints = points.Where(static point => point.IsEnabled).ToArray();
+                Volatile.Write(ref _historyDefinitions, enabledPoints.ToDictionary(static point => point.Id));
+                Interlocked.Exchange(ref _historyPolicyResetRequested, 1);
                 realtimeStore.RetainOnly(enabledPoints.Select(static point => point.Id));
                 // 在线数会在真实驱动阶段改为连接事件驱动；当前模拟驱动连接为确定性成功。
                 metrics.UpdateConfiguration(devices.Count, enabledDevices.Length, enabledPoints.Length);
@@ -199,6 +206,16 @@ public sealed class CollectionWorker(
         await foreach (PointValue value in _pipeline.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
         {
             realtimeStore.Update(value);
+            if (Interlocked.Exchange(ref _historyPolicyResetRequested, 0) == 1) historyPolicy.ResetAll();
+            IReadOnlyDictionary<Guid, PointDefinition> definitions = Volatile.Read(ref _historyDefinitions);
+            if (historyGate.CanWrite && definitions.TryGetValue(value.PointId, out PointDefinition? definition))
+            {
+                if (historyPolicy.ShouldRecord(definition, value)) historyBuffer.Enqueue(value);
+            }
+            else
+            {
+                historyPolicy.Reset(value.PointId);
+            }
             metrics.SetPipelineBacklog(_pipeline.Reader.Count);
         }
     }

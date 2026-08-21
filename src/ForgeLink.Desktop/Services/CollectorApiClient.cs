@@ -45,7 +45,7 @@ public sealed class CollectorApiClient : ICollectorApiClient, IDisposable
         _client = new HttpClient(handler)
         {
             BaseAddress = new Uri("http://localhost"),
-            Timeout = TimeSpan.FromSeconds(5)
+            Timeout = TimeSpan.FromSeconds(130)
         };
     }
 
@@ -116,6 +116,46 @@ public sealed class CollectorApiClient : ICollectorApiClient, IDisposable
         using HttpResponseMessage response = await _client.PostAsync("/api/v1/points/import", content, cancellationToken);
         ImportResultDto result = await ReadRequiredAsync<ImportResultDto>(response, cancellationToken);
         return result.ImportedCount;
+    }
+
+    /// <summary>读取不包含明文密码的 TDengine 配置。</summary>
+    public async Task<HistoryConfigurationDto> GetHistoryConfigurationAsync(CancellationToken cancellationToken) =>
+        await _client.GetFromJsonAsync<HistoryConfigurationDto>("/api/v1/history/configuration", cancellationToken)
+        ?? throw new InvalidOperationException("Collector Service 返回了空历史配置响应。");
+
+    /// <summary>保存 TDengine 配置；空密码由服务端解释为保留原密码。</summary>
+    public async Task<HistoryConfigurationDto> SaveHistoryConfigurationAsync(HistoryConfigurationUpdateDto configuration, CancellationToken cancellationToken)
+    {
+        using HttpResponseMessage response = await _client.PutAsJsonAsync("/api/v1/history/configuration", configuration, cancellationToken);
+        return await ReadRequiredAsync<HistoryConfigurationDto>(response, cancellationToken);
+    }
+
+    public async Task<HistoryOperationDto> TestHistoryAsync(CancellationToken cancellationToken) =>
+        await PostHistoryOperationAsync("/api/v1/history/test", cancellationToken);
+
+    public async Task<HistoryOperationDto> EnableHistoryAsync(CancellationToken cancellationToken) =>
+        await PostHistoryOperationAsync("/api/v1/history/enable", cancellationToken);
+
+    public async Task<HistoryOperationDto> DisableHistoryAsync(CancellationToken cancellationToken) =>
+        await PostHistoryOperationAsync("/api/v1/history/disable", cancellationToken);
+
+    /// <summary>通过 Collector Service 代理查询受范围限制的 TDengine 历史。</summary>
+    public async Task<IReadOnlyList<PointValue>> QueryHistoryAsync(
+        IReadOnlyList<Guid> pointIds,
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        int maxPoints,
+        CancellationToken cancellationToken)
+    {
+        string ids = string.Join(',', pointIds.Select(static id => id.ToString("D")));
+        string path = $"/api/v1/history/query?pointIds={Uri.EscapeDataString(ids)}&fromUtc={Uri.EscapeDataString(fromUtc.ToUniversalTime().ToString("O"))}&toUtc={Uri.EscapeDataString(toUtc.ToUniversalTime().ToString("O"))}&maxPoints={maxPoints}";
+        return await _client.GetFromJsonAsync<List<PointValue>>(path, cancellationToken) ?? [];
+    }
+
+    private async Task<HistoryOperationDto> PostHistoryOperationAsync(string path, CancellationToken cancellationToken)
+    {
+        using HttpResponseMessage response = await _client.PostAsync(path, null, cancellationToken);
+        return await ReadRequiredAsync<HistoryOperationDto>(response, cancellationToken);
     }
 
     /// <summary>读取成功响应中的必需 JSON 对象，并在失败时保留服务端原因。</summary>

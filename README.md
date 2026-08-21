@@ -9,7 +9,7 @@ ForgeLink 是面向 Windows x64 工控机和边缘计算机的 PLC 数据采集�
 - Collector Service 与 WPF Desktop 进程分离，关闭桌面端不影响采集；
 - 协议无关的 `IPlcDriver`、历史通道 `IHistoryChannel` 与配置仓储接口；
 - 基于有界 `Channel` 的异步采集管道和线程安全实时缓存；
-- SQLite 版本化初始化，仅保存设备和点位配置；
+- SQLite 版本化初始化，仅保存管理配置和加密连接凭据，不保存点位历史；
 - TDengine 历史门禁，默认关闭且绝不回退 SQLite；
 - 基于官方 `TDengine.Connector` 3.2.1 的 TDengine 3.x WebSocket 基础适配器、类型隔离超级表、批量写入和 SQL 查询；
 - WPF UI 明亮主题、统一设计令牌、虚拟化数据表格；
@@ -19,6 +19,9 @@ ForgeLink 是面向 Windows x64 工控机和边缘计算机的 PLC 数据采集�
 - 基于 NModbus 的 Modbus TCP 驱动，支持功能区地址、连续批量读取、Unit ID、超时和寄存器顺序；
 - 设备和点位完整 CRUD、关联删除保护、连接测试及运行时热加载；
 - 点位 CSV 导入导出，支持事务回滚和复杂文本转义。
+- TDengine 设置页支持 DPAPI 加密保存、脱敏读取、完整连接测试和显式启用/禁用；
+- 六种点位历史策略、100,000 条/10 分钟有界内存缓冲、1,000 条批量写入、指数退避和缺口指标；
+- 受 7 天范围限制的历史查询 API、Desktop 数值趋势预览和虚拟化明细表；
 
 ## 系统架构
 
@@ -84,7 +87,7 @@ dotnet run --project .\src\ForgeLink.Desktop
 
 解决方案入口是 `ForgeLink.slnx`。质量门禁包含 NuGet 还原、警告即错误编译、格式校验和 xUnit 测试。当前自动化测试覆盖工程值换算、配置边界、历史门禁、配置热加载信号、CSV、SQLite 删除保护、批量事务回滚、桌面强类型导航和设备/点位编辑器。
 
-真实 PLC、TDengine 3.x、REST/MQTT、Windows Service、安装升级和 72 小时稳定性仍需在对应现场或模拟环境中执行集成验收。TDengine 适配器尚未接入 DPAPI 配置、采集管道和桌面历史页面。
+本机 TDengine 3.4.2.6 与 `forge_link` 已完成真实认证、建表、批量写入、查询和测试表清理。当前默认 root 账号只作为本机开发配置，生产环境仍需专用最小权限账号。真实 PLC、TDengine 故障恢复、REST/MQTT、Windows Service、安装升级和 72 小时稳定性仍需专项验收。
 
 ## 许可证和贡献方式
 

@@ -29,7 +29,7 @@ public sealed class SqliteBoundaryTests
             await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken)) tables.Add(reader.GetString(0));
 
-            Assert.Equal(["devices", "points", "schema_version"], tables);
+            Assert.Equal(["devices", "points", "schema_version", "tdengine_connection"], tables);
             Assert.DoesNotContain(tables, static name => name.Contains("history", StringComparison.OrdinalIgnoreCase));
         }
         finally

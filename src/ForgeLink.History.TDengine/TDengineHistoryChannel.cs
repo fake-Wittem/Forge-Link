@@ -89,7 +89,7 @@ public sealed class TDengineHistoryChannel : IHistoryChannel
             using CancellationTokenRegistration registration = cancellationToken.Register(static state => TryCancel((DbCommand)state!), command);
             using DbDataReader reader = command.ExecuteReader();
             cancellationToken.ThrowIfCancellationRequested();
-            bool found = reader.Read() && string.Equals(Convert.ToString(reader.GetValue(0), CultureInfo.InvariantCulture), pointId, StringComparison.OrdinalIgnoreCase);
+            bool found = reader.Read() && string.Equals(TDengineValueConverter.ToText(reader.GetValue(0)), pointId, StringComparison.OrdinalIgnoreCase);
             if (!found) return new(false, "TDengine 测试点写入后未能查询到，历史通道不可启用。");
 
             return new(true, $"TDengine 3.x WebSocket 连接、认证、Database、建表、写入和查询验证通过。{compatibility.Message}");
@@ -187,17 +187,17 @@ public sealed class TDengineHistoryChannel : IHistoryChannel
 
     private static PointValue ToPointValue(DbDataReader row, string stableName)
     {
-        PointDataType dataType = Enum.Parse<PointDataType>(Convert.ToString(row.GetValue(6), CultureInfo.InvariantCulture)!, true);
+        PointDataType dataType = Enum.Parse<PointDataType>(TDengineValueConverter.ToText(row.GetValue(6)), true);
         bool isEvent = string.Equals(stableName, "plc_event", StringComparison.Ordinal);
         return new(
-            Convert.ToString(row.GetValue(1), CultureInfo.InvariantCulture) ?? string.Empty,
-            Guid.Parse(Convert.ToString(row.GetValue(2), CultureInfo.InvariantCulture)!),
-            Guid.Parse(Convert.ToString(row.GetValue(3), CultureInfo.InvariantCulture)!),
+            TDengineValueConverter.ToText(row.GetValue(1)),
+            Guid.Parse(TDengineValueConverter.ToText(row.GetValue(2))),
+            Guid.Parse(TDengineValueConverter.ToText(row.GetValue(3))),
             isEvent || row.IsDBNull(5) ? null : row.GetValue(5),
             isEvent || row.IsDBNull(4) ? null : row.GetValue(4),
             dataType,
-            Convert.ToString(row.GetValue(7), CultureInfo.InvariantCulture) ?? string.Empty,
-            Enum.Parse<DataQuality>(Convert.ToString(row.GetValue(8), CultureInfo.InvariantCulture)!, true),
+            TDengineValueConverter.ToText(row.GetValue(7)),
+            Enum.Parse<DataQuality>(TDengineValueConverter.ToText(row.GetValue(8)), true),
             row.IsDBNull(9) ? null : ParseTimestamp(row.GetValue(9)),
             ParseTimestamp(row.GetValue(10)),
             Convert.ToInt64(row.GetValue(11), CultureInfo.InvariantCulture));

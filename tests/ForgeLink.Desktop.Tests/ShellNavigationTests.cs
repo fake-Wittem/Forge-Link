@@ -64,5 +64,11 @@ public sealed class ShellNavigationTests
         public Task DeletePointAsync(Guid pointId, CancellationToken cancellationToken) => Task.CompletedTask;
         public Task<byte[]> ExportPointsAsync(CancellationToken cancellationToken) => Task.FromResult(Array.Empty<byte>());
         public Task<int> ImportPointsAsync(string csv, CancellationToken cancellationToken) => Task.FromResult(0);
+        public Task<HistoryConfigurationDto> GetHistoryConfigurationAsync(CancellationToken cancellationToken) => Task.FromResult(new HistoryConfigurationDto(false, "127.0.0.1", 6041, "", false, "", false, true, true, 10000, "NotConfigured"));
+        public Task<HistoryConfigurationDto> SaveHistoryConfigurationAsync(HistoryConfigurationUpdateDto configuration, CancellationToken cancellationToken) => Task.FromResult(new HistoryConfigurationDto(true, configuration.Host, configuration.Port, configuration.Username, true, configuration.Database, configuration.UseSsl, configuration.EnableCompression, configuration.AutoReconnect, configuration.RequestTimeoutMs, "Disabled"));
+        public Task<HistoryOperationDto> TestHistoryAsync(CancellationToken cancellationToken) => Task.FromResult(new HistoryOperationDto(true, "OK", "Ready"));
+        public Task<HistoryOperationDto> EnableHistoryAsync(CancellationToken cancellationToken) => Task.FromResult(new HistoryOperationDto(true, "OK", "Enabled"));
+        public Task<HistoryOperationDto> DisableHistoryAsync(CancellationToken cancellationToken) => Task.FromResult(new HistoryOperationDto(true, "OK", "Disabled"));
+        public Task<IReadOnlyList<PointValue>> QueryHistoryAsync(IReadOnlyList<Guid> pointIds, DateTimeOffset fromUtc, DateTimeOffset toUtc, int maxPoints, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<PointValue>>([]);
     }
 }

@@ -35,3 +35,32 @@ public sealed record DeviceConnectionTestDto(bool Succeeded, string Message, Dat
 
 /// <summary>表示点位 CSV 导入响应。</summary>
 public sealed record ImportResultDto(int ImportedCount);
+
+/// <summary>表示已脱敏的 TDengine 历史配置和门禁状态。</summary>
+public sealed record HistoryConfigurationDto(
+    bool IsConfigured,
+    string Host,
+    int Port,
+    string Username,
+    bool HasPassword,
+    string Database,
+    bool UseSsl,
+    bool EnableCompression,
+    bool AutoReconnect,
+    int RequestTimeoutMs,
+    string State);
+
+/// <summary>表示桌面端提交的 TDengine 配置；空密码表示保留现有密码。</summary>
+public sealed record HistoryConfigurationUpdateDto(
+    string Host,
+    int Port,
+    string Username,
+    string? Password,
+    string Database,
+    bool UseSsl,
+    bool EnableCompression,
+    bool AutoReconnect,
+    int RequestTimeoutMs);
+
+/// <summary>表示历史测试或启停操作结果。</summary>
+public sealed record HistoryOperationDto(bool Succeeded, string Message, string State);

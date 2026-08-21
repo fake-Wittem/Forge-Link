@@ -9,7 +9,7 @@ ForgeLink is a PLC data collection and forwarding system for Windows x64 industr
 - Separate Collector Service and WPF Desktop processes;
 - Protocol-neutral `IPlcDriver`, `IHistoryChannel`, and configuration repository contracts;
 - Asynchronous bounded-channel collection pipeline and thread-safe real-time cache;
-- Versioned SQLite initialization for configuration data only;
+- Versioned SQLite initialization for management configuration and encrypted connection credentials only, never point history;
 - TDengine history gate, disabled by default with no SQLite fallback;
 - A TDengine 3.x WebSocket foundation adapter using the official `TDengine.Connector` 3.2.1, with typed supertables, batch writes, and SQL queries;
 - Light WPF UI theme, shared design tokens, and virtualized data grids;
@@ -19,6 +19,9 @@ ForgeLink is a PLC data collection and forwarding system for Windows x64 industr
 - An NModbus-based Modbus TCP driver with address areas, contiguous batch reads, Unit ID, timeouts, and register ordering;
 - Full device/point CRUD, protected deletion, connection tests, and runtime hot reload;
 - Point CSV import/export with transaction rollback and quoted-field support.
+- A TDengine settings page with DPAPI-backed password storage, redacted reads, full connection testing, and explicit enable/disable controls;
+- Six point-history policies, a 100,000-value/10-minute bounded memory buffer, 1,000-value batch writes, exponential retry, and gap metrics;
+- A seven-day-bounded history query API plus Desktop numeric trend preview and virtualized details;
 
 ## Architecture
 
@@ -76,7 +79,7 @@ The second command starts the Collector Service in the background, waits for its
 
 `ForgeLink.slnx` is the solution entry point. The verification gate restores dependencies, builds with warnings as errors, checks formatting, and runs xUnit tests. Current automated coverage includes engineering conversion, configuration validation, history gating, hot-reload signaling, CSV handling, protected deletion, batch transaction rollback, typed desktop navigation, and device/point editors.
 
-Real PLCs, TDengine 3.x, REST/MQTT, Windows Service behavior, installers/upgrades, and 72-hour stability require dedicated integration environments. The TDengine adapter is not yet connected to DPAPI-backed configuration, the collection pipeline, or the desktop history page.
+Local TDengine 3.4.2.6 with `forge_link` has passed real authentication, schema creation, batch write, query, and test-table cleanup. The default root account is development-only; production still requires a dedicated least-privilege account. Real PLCs, TDengine failure recovery, REST/MQTT, Windows Service behavior, installers/upgrades, and 72-hour stability still require dedicated acceptance work.
 
 ## License and contributing
 
