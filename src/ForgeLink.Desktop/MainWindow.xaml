@@ -6,7 +6,6 @@
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-                 xmlns:navigation="clr-namespace:ForgeLink.Desktop.Navigation"
                  Title="ForgeLink" Width="1360" Height="820" MinWidth="1080" MinHeight="680"
                  WindowStartupLocation="CenterScreen" Background="{StaticResource ForgeCanvasBrush}"
                  ExtendsContentIntoTitleBar="True">
@@ -27,16 +26,22 @@
                             <TextBlock Text="工业数据边缘网关" Style="{StaticResource MutedTextStyle}" FontSize="11" />
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel Grid.Row="1">
-                        <ui:Button Content="概览仪表盘" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Overview}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="设备管理" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Devices}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="点位管理" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Points}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="实时数据" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Realtime}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="历史趋势" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.History}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="数据转发" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Transport}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="告警与事件" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Alarms}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                        <ui:Button Content="系统设置" Command="{Binding NavigateCommand}" CommandParameter="{x:Static navigation:AppRoute.Settings}" HorizontalContentAlignment="Left" Margin="0,2" Padding="14,10" />
-                    </StackPanel>
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding NavigationItems}"
+                             SelectedValuePath="Route"
+                             SelectedValue="{Binding SelectedRoute, Mode=TwoWay}"
+                             Style="{StaticResource ForgeNavigationListStyle}"
+                             ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="28" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Glyph}" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="14" FontWeight="Medium" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                     <ui:Card Grid.Row="2" Padding="12">
                         <StackPanel>
                             <TextBlock Text="服务状态" Style="{StaticResource MutedTextStyle}" />

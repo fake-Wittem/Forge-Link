@@ -1,16 +1,31 @@
 <!-- 文件说明：点位管理独立页面。责任边界：只呈现点位列表、CSV 命令和点位编辑器。 -->
 <UserControl x:Class="ForgeLink.Desktop.Views.Pages.PointsView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" xmlns:editors="clr-namespace:ForgeLink.Desktop.Views.Editors">
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:editors="clr-namespace:ForgeLink.Desktop.Views.Editors">
     <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
         <StackPanel><TextBlock Text="点位管理" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="稳定 ID、工程换算、历史策略、CSV 与写入白名单" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12"><ui:Button Content="新增点位" Command="{Binding NewPointCommand}" Appearance="Primary" Margin="0,0,8,0" /><ui:Button Content="编辑" Command="{Binding EditPointCommand}" Margin="0,0,8,0" /><ui:Button Content="删除" Command="{Binding RequestDeletePointCommand}" Margin="0,0,8,0" /><ui:Button Content="导入 CSV" Command="{Binding ImportPointsCommand}" Margin="0,0,8,0" /><ui:Button Content="导出 CSV" Command="{Binding ExportPointsCommand}" /></StackPanel>
         <ui:InfoBar Grid.Row="2" Margin="0,0,0,12" Title="配置操作" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" />
-        <Grid Grid.Row="3">
+        <Grid Grid.Row="3" VerticalAlignment="Stretch">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-            <ui:Card Grid.Column="0" Padding="12" Margin="0,0,12,0"><DataGrid ItemsSource="{Binding Points}" SelectedItem="{Binding SelectedPoint}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" BorderThickness="0" EnableRowVirtualization="True"><DataGrid.Columns><DataGridTextColumn Header="编码" Binding="{Binding Code}" Width="*" /><DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="2*" /><DataGridTextColumn Header="地址" Binding="{Binding Address}" Width="*" /><DataGridTextColumn Header="类型" Binding="{Binding DataType}" Width="*" /><DataGridTextColumn Header="缩放" Binding="{Binding Scale}" Width="*" /><DataGridTextColumn Header="单位" Binding="{Binding Unit}" Width="*" /><DataGridTextColumn Header="历史模式" Binding="{Binding HistoryMode}" Width="2*" /><DataGridCheckBoxColumn Header="允许写入" Binding="{Binding AllowWrite}" Width="*" /></DataGrid.Columns></DataGrid></ui:Card>
-            <editors:PointEditorView Grid.Column="1" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}" />
+            <Border Grid.Column="0" Style="{StaticResource ForgeTableSurfaceStyle}" Margin="0,0,12,0">
+                <DataGrid ItemsSource="{Binding Points}" SelectedItem="{Binding SelectedPoint}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="编码" Binding="{Binding Code}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="名称" Binding="{Binding Name}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                        <DataGridTextColumn Header="地址" Binding="{Binding Address}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="类型" Binding="{Binding DataType}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="缩放" Binding="{Binding Scale}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="单位" Binding="{Binding Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="历史模式" Binding="{Binding HistoryMode}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                        <DataGridCheckBoxColumn Header="允许写入" Binding="{Binding AllowWrite}" ElementStyle="{StaticResource ForgeTableSwitchStyle}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+            <editors:PointEditorView Grid.Column="1" VerticalAlignment="Top" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}" />
             <Border Grid.ColumnSpan="2" VerticalAlignment="Bottom" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="8" Padding="14" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock Text="确认删除选中的点位？删除后实时缓存会在后续刷新中移除。" VerticalAlignment="Center" /><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeletePointCommand}" Margin="12,0,8,0" /><ui:Button Content="确认删除" Command="{Binding ConfirmDeletePointCommand}" Appearance="Primary" /></StackPanel></DockPanel></Border>
         </Grid>
     </Grid>

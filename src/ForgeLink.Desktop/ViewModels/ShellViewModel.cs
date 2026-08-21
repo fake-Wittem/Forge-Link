@@ -20,6 +20,31 @@ public partial class ShellViewModel : ObservableObject, IAsyncDisposable
     [ObservableProperty] private AppRoute _currentRoute = AppRoute.Overview;
     [ObservableProperty] private PageViewModelBase _currentPage;
 
+    public IReadOnlyList<ShellNavigationItem> NavigationItems { get; } =
+    [
+        new(AppRoute.Overview, "概览仪表盘", "⌂"),
+        new(AppRoute.Devices, "设备管理", "▣"),
+        new(AppRoute.Points, "点位管理", "⌖"),
+        new(AppRoute.Realtime, "实时数据", "◉"),
+        new(AppRoute.History, "历史趋势", "⌁"),
+        new(AppRoute.Transport, "数据转发", "⇄"),
+        new(AppRoute.Alarms, "告警与事件", "△"),
+        new(AppRoute.Settings, "系统设置", "⚙")
+    ];
+
+    /// <summary>为菜单选择提供双向绑定入口，实际页面切换仍由异步导航命令完成。</summary>
+    public AppRoute SelectedRoute
+    {
+        get => CurrentRoute;
+        set
+        {
+            if (value != CurrentRoute)
+            {
+                NavigateCommand.Execute(value);
+            }
+        }
+    }
+
     public SystemStatusMonitor Status { get; }
     public NotificationService Notifications { get; }
 
@@ -63,6 +88,8 @@ public partial class ShellViewModel : ObservableObject, IAsyncDisposable
         finally { _navigationLock.Release(); }
     }
 
+    partial void OnCurrentRouteChanged(AppRoute value) => OnPropertyChanged(nameof(SelectedRoute));
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
@@ -75,3 +102,6 @@ public partial class ShellViewModel : ObservableObject, IAsyncDisposable
         _applicationResource.Dispose();
     }
 }
+
+/// <summary>描述左侧菜单中的一个强类型导航项。</summary>
+public sealed record ShellNavigationItem(AppRoute Route, string Title, string Glyph);

@@ -18,17 +18,17 @@
         </ui:Card>
         <Grid Grid.Row="2" Margin="0,0,0,12"><TextBlock Text="{Binding ResultSummary}" FontWeight="SemiBold" /><ui:InfoBar Title="历史查询" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" HorizontalAlignment="Right" Width="520" /></Grid>
         <controls:HistoryTrendChart Grid.Row="3" Values="{Binding Values}" Margin="0,0,0,12" />
-        <ui:Card Grid.Row="4" Padding="10">
-            <DataGrid ItemsSource="{Binding Values}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True" BorderThickness="0">
+        <Border Grid.Row="4" Style="{StaticResource ForgeTableSurfaceStyle}">
+            <DataGrid ItemsSource="{Binding Values}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="采集时间" Binding="{Binding CollectTimestampUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff} UTC}" Width="2*" />
-                    <DataGridTextColumn Header="工程值" Binding="{Binding EngineeringValue}" Width="*" />
-                    <DataGridTextColumn Header="原始值" Binding="{Binding RawValue}" Width="*" />
-                    <DataGridTextColumn Header="质量" Binding="{Binding Quality}" Width="*" />
-                    <DataGridTextColumn Header="单位" Binding="{Binding Unit}" Width="*" />
-                    <DataGridTextColumn Header="序号" Binding="{Binding SequenceNumber}" Width="*" />
+                    <DataGridTextColumn Header="采集时间" Binding="{Binding CollectTimestampUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff} UTC}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                    <DataGridTextColumn Header="工程值" Binding="{Binding EngineeringValue}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="原始值" Binding="{Binding RawValue}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="质量" Binding="{Binding Quality}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="单位" Binding="{Binding Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="序号" Binding="{Binding SequenceNumber}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
                 </DataGrid.Columns>
             </DataGrid>
-        </ui:Card>
+        </Border>
     </Grid>
 </UserControl>

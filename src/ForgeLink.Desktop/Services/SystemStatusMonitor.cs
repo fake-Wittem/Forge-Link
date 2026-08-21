@@ -19,6 +19,12 @@ public partial class SystemStatusMonitor(ICollectorApiClient apiClient) : Observ
     [ObservableProperty] private int _onlineDeviceCount;
     [ObservableProperty] private int _enabledPointCount;
     [ObservableProperty] private int _realtimeValueCount;
+    [ObservableProperty] private long _collectedValueCount;
+    [ObservableProperty] private long _failedValueCount;
+    [ObservableProperty] private int _pipelineBacklog;
+    [ObservableProperty] private double _successRate;
+    [ObservableProperty] private double _onlineRate;
+    [ObservableProperty] private double _cacheCoverageRate;
     [ObservableProperty] private string _successRateText = "—";
     [ObservableProperty] private string _historyStatus = "NotConfigured";
     [ObservableProperty] private string _runtimeText = "—";
@@ -45,6 +51,12 @@ public partial class SystemStatusMonitor(ICollectorApiClient apiClient) : Observ
             OnlineDeviceCount = status.OnlineDeviceCount;
             EnabledPointCount = status.EnabledPointCount;
             RealtimeValueCount = status.RealtimeValueCount;
+            CollectedValueCount = status.CollectedValueCount;
+            FailedValueCount = status.FailedValueCount;
+            PipelineBacklog = status.PipelineBacklog;
+            SuccessRate = status.SuccessRate * 100;
+            OnlineRate = status.DeviceCount == 0 ? 0 : (double)status.OnlineDeviceCount / status.DeviceCount * 100;
+            CacheCoverageRate = status.EnabledPointCount == 0 ? 0 : Math.Min(100, (double)status.RealtimeValueCount / status.EnabledPointCount * 100);
             SuccessRateText = status.SuccessRate.ToString("P1", System.Globalization.CultureInfo.CurrentCulture);
             HistoryStatus = status.HistoryStatus;
             RuntimeText = FormatRuntime(DateTimeOffset.UtcNow - status.StartedAtUtc);
