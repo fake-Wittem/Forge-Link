@@ -13,12 +13,13 @@ public sealed record PointCsvParseResult(IReadOnlyList<PointDefinition> Points, 
 /// <summary>提供支持引号、逗号和换行的点位 CSV 编解码。</summary>
 public sealed class PointCsvCodec
 {
-    private static readonly string[] Headers =
+    private static readonly string[] LegacyHeaders =
     [
         "Id", "DeviceId", "Code", "Name", "Address", "DataType", "Scale", "Offset", "Unit",
         "ScanIntervalMs", "Deadband", "HistoryMode", "IsEnabled", "AllowWrite", "ByteOrder", "WordOrder",
         "StringLength"
     ];
+    private static readonly string[] Headers = [.. LegacyHeaders, "GroupName"];
 
     /// <summary>把点位配置导出为采用固定英文列名和不变区域格式的 CSV。</summary>
     public string Export(IReadOnlyList<PointDefinition> points)
@@ -45,7 +46,8 @@ public sealed class PointCsvCodec
                 point.AllowWrite.ToString(CultureInfo.InvariantCulture),
                 point.ByteOrder.ToString(),
                 point.WordOrder.ToString(),
-                point.StringLength.ToString(CultureInfo.InvariantCulture)
+                point.StringLength.ToString(CultureInfo.InvariantCulture),
+                point.GroupName
             ];
             builder.AppendLine(string.Join(',', values.Select(Escape)));
         }
@@ -57,8 +59,10 @@ public sealed class PointCsvCodec
     {
         IReadOnlyList<IReadOnlyList<string>> rows = ParseRows(csv);
         if (rows.Count == 0) return new([], ["CSV 文件为空。"]);
-        if (!Headers.SequenceEqual(rows[0], StringComparer.OrdinalIgnoreCase))
-            return new([], [$"CSV 表头必须是：{string.Join(',', Headers)}"]);
+        bool isCurrentFormat = Headers.SequenceEqual(rows[0], StringComparer.OrdinalIgnoreCase);
+        bool isLegacyFormat = LegacyHeaders.SequenceEqual(rows[0], StringComparer.OrdinalIgnoreCase);
+        if (!isCurrentFormat && !isLegacyFormat)
+            return new([], [$"CSV 表头必须是：{string.Join(',', Headers)}（也兼容不含 GroupName 的旧版表头）"]);
 
         List<PointDefinition> points = [];
         List<string> errors = [];
@@ -66,20 +70,21 @@ public sealed class PointCsvCodec
         {
             IReadOnlyList<string> row = rows[index];
             if (row.Count == 1 && string.IsNullOrWhiteSpace(row[0])) continue;
-            if (row.Count != Headers.Length)
+            int expectedColumns = isCurrentFormat ? Headers.Length : LegacyHeaders.Length;
+            if (row.Count != expectedColumns)
             {
-                errors.Add($"第 {index + 1} 行应包含 {Headers.Length} 列，实际为 {row.Count} 列。");
+                errors.Add($"第 {index + 1} 行应包含 {expectedColumns} 列，实际为 {row.Count} 列。");
                 continue;
             }
 
-            if (TryCreatePoint(row, out PointDefinition? point, out string? error)) points.Add(point);
+            if (TryCreatePoint(row, isCurrentFormat, out PointDefinition? point, out string? error)) points.Add(point);
             else errors.Add($"第 {index + 1} 行：{error}");
         }
         return new(points, errors);
     }
 
     /// <summary>把单行字段转换为强类型点位配置。</summary>
-    private static bool TryCreatePoint(IReadOnlyList<string> row, out PointDefinition point, out string? error)
+    private static bool TryCreatePoint(IReadOnlyList<string> row, bool hasGroupName, out PointDefinition point, out string? error)
     {
         point = default!;
         error = null;
@@ -99,7 +104,8 @@ public sealed class PointCsvCodec
         else
         {
             point = new(id, deviceId, row[2], row[3], row[4], dataType, scale, offset, row[8], interval,
-                deadband, historyMode, enabled, allowWrite, byteOrder, wordOrder, stringLength);
+                deadband, historyMode, enabled, allowWrite, byteOrder, wordOrder, stringLength,
+                hasGroupName ? row[17].Trim() : string.Empty);
             IReadOnlyList<string> validationErrors = point.Validate();
             if (validationErrors.Count > 0) error = string.Join(' ', validationErrors);
         }

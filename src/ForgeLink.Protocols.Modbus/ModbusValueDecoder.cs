@@ -42,10 +42,12 @@ public sealed class ModbusValueDecoder
         };
     }
 
-    /// <summary>按配置字节长度解码 ASCII，并移除结尾空字符。</summary>
+    /// <summary>按配置字节长度解码 ASCII，并把首个 NUL 视为 PLC 字符串结束符。</summary>
     private static string DecodeString(byte[] bytes, int configuredLength)
     {
         int length = configuredLength > 0 ? Math.Min(configuredLength, bytes.Length) : bytes.Length;
-        return Encoding.ASCII.GetString(bytes, 0, length).TrimEnd('\0');
+        int terminator = Array.IndexOf(bytes, (byte)0, 0, length);
+        if (terminator >= 0) length = terminator;
+        return Encoding.ASCII.GetString(bytes, 0, length);
     }
 }

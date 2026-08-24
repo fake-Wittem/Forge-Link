@@ -5,28 +5,38 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:controls="clr-namespace:ForgeLink.Desktop.Controls">
     <Grid Margin="{StaticResource PagePadding}">
-        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="220" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="220" /><RowDefinition Height="*" /></Grid.RowDefinitions>
         <StackPanel><TextBlock Text="历史趋势" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="由 Collector Service 代理查询 TDengine；单次查询范围不超过 7 天" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
         <ui:Card Grid.Row="1" Padding="16" Margin="0,0,0,12">
             <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="2*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <StackPanel Margin="0,0,10,0"><TextBlock Text="历史点位" Style="{StaticResource MutedTextStyle}" /><controls:ForgeComboBox ItemsSource="{Binding Points}" SelectedItem="{Binding SelectedPoint}" DisplayMemberPath="Name" Margin="0,5,0,0" /></StackPanel>
-                <StackPanel Grid.Column="1" Margin="0,0,10,0"><TextBlock Text="开始时间" Style="{StaticResource MutedTextStyle}" /><ui:TextBox Text="{Binding FromLocal, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0" /></StackPanel>
-                <StackPanel Grid.Column="2" Margin="0,0,10,0"><TextBlock Text="结束时间" Style="{StaticResource MutedTextStyle}" /><ui:TextBox Text="{Binding ToLocal, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0" /></StackPanel>
-                <ui:Button Grid.Column="3" Content="查询趋势" Command="{Binding QueryCommand}" Appearance="Primary" VerticalAlignment="Bottom" Padding="18,8" />
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="2*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,10,12"><TextBlock Text="设备" Style="{StaticResource MutedTextStyle}" /><controls:ForgeComboBox ItemsSource="{Binding DeviceFilters}" SelectedItem="{Binding SelectedDeviceFilter}" DisplayMemberPath="Device.Name" Margin="0,5,0,0" /></StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,10,12"><TextBlock Text="点位分组" Style="{StaticResource MutedTextStyle}" /><controls:ForgeComboBox ItemsSource="{Binding PointGroupFilters}" SelectedItem="{Binding SelectedPointGroupFilter}" DisplayMemberPath="DisplayName" Margin="0,5,0,0" /></StackPanel>
+                <StackPanel Grid.Column="2" Margin="0,0,0,12"><TextBlock Text="历史点位" Style="{StaticResource MutedTextStyle}" /><controls:ForgeComboBox ItemsSource="{Binding FilteredPoints}" SelectedItem="{Binding SelectedPoint}" DisplayMemberPath="Name" Margin="0,5,0,0" /></StackPanel>
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,10,0">
+                    <TextBlock Text="开始时间" Style="{StaticResource MutedTextStyle}" />
+                    <controls:ForgeDateTimePicker SelectedDateTime="{Binding FromLocalDateTime, Mode=TwoWay}" Margin="0,5,0,0" Width="420" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,10,0">
+                    <TextBlock Text="结束时间" Style="{StaticResource MutedTextStyle}" />
+                    <controls:ForgeDateTimePicker SelectedDateTime="{Binding ToLocalDateTime, Mode=TwoWay}" Margin="0,5,0,0" Width="420" HorizontalAlignment="Left" />
+                </StackPanel>
+                <ui:Button Grid.Row="1" Grid.Column="3" Content="查询趋势" Command="{Binding QueryCommand}" IsEnabled="{Binding IsHistoryAvailable}" Appearance="Primary" VerticalAlignment="Bottom" Padding="18,8" />
             </Grid>
         </ui:Card>
-        <Grid Grid.Row="2" Margin="0,0,0,12"><TextBlock Text="{Binding ResultSummary}" FontWeight="SemiBold" /><ui:InfoBar Title="历史查询" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" HorizontalAlignment="Right" Width="520" /></Grid>
-        <controls:HistoryTrendChart Grid.Row="3" Values="{Binding Values}" Margin="0,0,0,12" />
-        <Border Grid.Row="4" Style="{StaticResource ForgeTableSurfaceStyle}">
+        <ui:InfoBar Grid.Row="2" Margin="0,0,0,12" Title="历史存储不可用" Message="{Binding HistoryAvailabilityMessage}" Severity="Warning" IsOpen="{Binding HistoryAvailabilityMessage, Converter={StaticResource StringVisibility}}" />
+        <Grid Grid.Row="3" Margin="0,0,0,12"><TextBlock Text="{Binding ResultSummary}" FontWeight="SemiBold" /><ui:InfoBar Title="历史查询" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" HorizontalAlignment="Right" Width="520" /></Grid>
+        <controls:HistoryTrendChart Grid.Row="4" Values="{Binding Values}" Margin="0,0,0,12" />
+        <Border Grid.Row="5" Style="{StaticResource ForgeTableSurfaceStyle}">
             <DataGrid ItemsSource="{Binding Values}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="采集时间" Binding="{Binding CollectTimestampUtc, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff} UTC}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                    <DataGridTextColumn Header="采集时间" Binding="{Binding CollectTimestampUtc, Converter={StaticResource LocalDateTime}}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
                     <DataGridTextColumn Header="工程值" Binding="{Binding EngineeringValue}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
                     <DataGridTextColumn Header="原始值" Binding="{Binding RawValue}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
                     <DataGridTextColumn Header="质量" Binding="{Binding Quality}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
                     <DataGridTextColumn Header="单位" Binding="{Binding Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                    <DataGridTextColumn Header="序号" Binding="{Binding SequenceNumber}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Binding="{Binding SequenceNumber}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*"><DataGridTextColumn.Header><TextBlock Text="采集序号" ToolTip="用于还原同一 Collector Service 运行周期内的采集先后顺序。" /></DataGridTextColumn.Header></DataGridTextColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

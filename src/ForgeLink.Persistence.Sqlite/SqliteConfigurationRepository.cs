@@ -40,7 +40,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
         const string sql = """
             PRAGMA journal_mode=WAL;
             CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);
-            INSERT INTO schema_version(version) SELECT 4 WHERE NOT EXISTS (SELECT 1 FROM schema_version);
+            INSERT INTO schema_version(version) SELECT 5 WHERE NOT EXISTS (SELECT 1 FROM schema_version);
             CREATE TABLE IF NOT EXISTS devices (
                 id TEXT PRIMARY KEY, name TEXT NOT NULL, protocol TEXT NOT NULL, host TEXT NOT NULL,
                 port INTEGER NOT NULL, is_enabled INTEGER NOT NULL, default_scan_interval_ms INTEGER NOT NULL,
@@ -52,7 +52,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
                 unit TEXT NOT NULL, scan_interval_ms INTEGER NOT NULL, deadband REAL NOT NULL,
                 history_mode INTEGER NOT NULL, is_enabled INTEGER NOT NULL, allow_write INTEGER NOT NULL,
                 byte_order INTEGER NOT NULL DEFAULT 0, word_order INTEGER NOT NULL DEFAULT 0,
-                string_length INTEGER NOT NULL DEFAULT 0,
+                string_length INTEGER NOT NULL DEFAULT 0, group_name TEXT NOT NULL DEFAULT '',
                 FOREIGN KEY(device_id) REFERENCES devices(id));
             CREATE UNIQUE INDEX IF NOT EXISTS ux_points_device_code ON points(device_id, code);
             CREATE TABLE IF NOT EXISTS tdengine_connection (
@@ -68,6 +68,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         await ApplyVersion3MigrationAsync(connection, cancellationToken).ConfigureAwait(false);
         await ApplyVersion4MigrationAsync(connection, cancellationToken).ConfigureAwait(false);
+        await ApplyVersion5MigrationAsync(connection, cancellationToken).ConfigureAwait(false);
         await SeedDemoConfigurationAsync(connection, cancellationToken).ConfigureAwait(false);
     }
 
@@ -133,14 +134,14 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
         List<PointDefinition> points = [];
         await using SqliteConnection connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
         await using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = "SELECT id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length FROM points ORDER BY code";
+        command.CommandText = "SELECT id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length,group_name FROM points ORDER BY group_name,code";
         await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             points.Add(new(Guid.Parse(reader.GetString(0)), Guid.Parse(reader.GetString(1)), reader.GetString(2), reader.GetString(3),
                 reader.GetString(4), (PointDataType)reader.GetInt32(5), reader.GetDouble(6), reader.GetDouble(7), reader.GetString(8),
                 reader.GetInt32(9), reader.GetDouble(10), (HistoryRecordMode)reader.GetInt32(11), reader.GetBoolean(12), reader.GetBoolean(13),
-                (RegisterByteOrder)reader.GetInt32(14), (RegisterWordOrder)reader.GetInt32(15), reader.GetInt32(16)));
+                (RegisterByteOrder)reader.GetInt32(14), (RegisterWordOrder)reader.GetInt32(15), reader.GetInt32(16), reader.GetString(17)));
         }
         return points;
     }
@@ -164,9 +165,9 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             await using SqliteCommand command = connection.CreateCommand();
             command.Transaction = transaction;
             command.CommandText = """
-                INSERT INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length)
-                VALUES($id,$device,$code,$name,$address,$type,$scale,$offset,$unit,$interval,$deadband,$history,$enabled,$write,$byteOrder,$wordOrder,$stringLength)
-                ON CONFLICT(id) DO UPDATE SET device_id=$device,code=$code,name=$name,address=$address,data_type=$type,scale=$scale,offset=$offset,unit=$unit,scan_interval_ms=$interval,deadband=$deadband,history_mode=$history,is_enabled=$enabled,allow_write=$write,byte_order=$byteOrder,word_order=$wordOrder,string_length=$stringLength
+                INSERT INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length,group_name)
+                VALUES($id,$device,$code,$name,$address,$type,$scale,$offset,$unit,$interval,$deadband,$history,$enabled,$write,$byteOrder,$wordOrder,$stringLength,$groupName)
+                ON CONFLICT(id) DO UPDATE SET device_id=$device,code=$code,name=$name,address=$address,data_type=$type,scale=$scale,offset=$offset,unit=$unit,scan_interval_ms=$interval,deadband=$deadband,history_mode=$history,is_enabled=$enabled,allow_write=$write,byte_order=$byteOrder,word_order=$wordOrder,string_length=$stringLength,group_name=$groupName
                 """;
             command.Parameters.AddWithValue("$id", point.Id.ToString("D"));
             command.Parameters.AddWithValue("$device", point.DeviceId.ToString("D"));
@@ -185,6 +186,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             command.Parameters.AddWithValue("$byteOrder", (int)point.ByteOrder);
             command.Parameters.AddWithValue("$wordOrder", (int)point.WordOrder);
             command.Parameters.AddWithValue("$stringLength", point.StringLength);
+            command.Parameters.AddWithValue("$groupName", point.GroupName);
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -271,12 +273,12 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
         command.CommandText = """
             INSERT OR IGNORE INTO devices(id,name,protocol,host,port,is_enabled,default_scan_interval_ms,unit_id,connection_timeout_ms,read_timeout_ms)
             VALUES($device,'模拟产线 PLC','Simulation','127.0.0.1',502,1,1000,1,3000,2000);
-            INSERT OR IGNORE INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length)
-            VALUES('21111111-1111-1111-1111-111111111111',$device,'TEMP_01','入口温度','D100',6,0.1,0,'°C',1000,0.2,5,1,0,0,0,0);
-            INSERT OR IGNORE INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length)
-            VALUES('31111111-1111-1111-1111-111111111111',$device,'PRESSURE_01','管路压力','D102',6,0.01,0,'MPa',1000,0.01,5,1,0,0,0,0);
-            INSERT OR IGNORE INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length)
-            VALUES('41111111-1111-1111-1111-111111111111',$device,'RUNNING_01','运行状态','M0',0,1,0,'',1000,0,2,1,0,0,0,0);
+            INSERT OR IGNORE INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length,group_name)
+            VALUES('21111111-1111-1111-1111-111111111111',$device,'TEMP_01','入口温度','D100',6,0.1,0,'°C',1000,0.2,5,1,0,0,0,0,'工艺参数');
+            INSERT OR IGNORE INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length,group_name)
+            VALUES('31111111-1111-1111-1111-111111111111',$device,'PRESSURE_01','管路压力','D102',6,0.01,0,'MPa',1000,0.01,5,1,0,0,0,0,'工艺参数');
+            INSERT OR IGNORE INTO points(id,device_id,code,name,address,data_type,scale,offset,unit,scan_interval_ms,deadband,history_mode,is_enabled,allow_write,byte_order,word_order,string_length,group_name)
+            VALUES('41111111-1111-1111-1111-111111111111',$device,'RUNNING_01','运行状态','M0',0,1,0,'',1000,0,2,1,0,0,0,0,'运行状态');
             """;
         command.Parameters.AddWithValue("$device", deviceId.ToString("D", CultureInfo.InvariantCulture));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -301,6 +303,15 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
     {
         await using SqliteCommand command = connection.CreateCommand();
         command.CommandText = "UPDATE schema_version SET version = 4 WHERE version < 4";
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>为点位配置增加可选的自定义分组名称。</summary>
+    private static async Task ApplyVersion5MigrationAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await AddColumnIfMissingAsync(connection, "points", "group_name", "TEXT NOT NULL DEFAULT ''", cancellationToken).ConfigureAwait(false);
+        await using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "UPDATE schema_version SET version = 5 WHERE version < 5";
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 

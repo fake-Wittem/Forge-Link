@@ -2,8 +2,10 @@
 // 责任边界：设备表单状态由 DeviceEditorViewModel 管理，通信通过 ICollectorApiClient。
 
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ForgeLink.Desktop.Models;
 using ForgeLink.Desktop.Services;
 using ForgeLink.Desktop.ViewModels.Editors;
 using ForgeLink.Domain;
@@ -15,12 +17,16 @@ public partial class DevicesViewModel(ICollectorApiClient apiClient, Notificatio
     : PageViewModelBase(notification)
 {
     [ObservableProperty] private DeviceDefinition? _selectedDevice;
+    [ObservableProperty] private SelectableRow<DeviceDefinition>? _selectedDeviceRow;
     [ObservableProperty] private bool _isDeletePending;
     [ObservableProperty] private bool _isBusy;
 
     public ObservableCollection<DeviceDefinition> Devices { get; } = [];
+    public ObservableCollection<SelectableRow<DeviceDefinition>> DeviceRows { get; } = [];
     public DeviceEditorViewModel Editor { get; } = new();
     public NotificationService Messages => Notification;
+    public int CheckedDeviceCount => DeviceRows.Count(static row => row.IsChecked);
+    public bool HasCheckedDevices => CheckedDeviceCount > 0;
 
     /// <inheritdoc />
     public override async Task OnNavigatedToAsync(CancellationToken cancellationToken) =>
@@ -34,10 +40,10 @@ public partial class DevicesViewModel(ICollectorApiClient apiClient, Notificatio
     }
 
     [RelayCommand]
-    private void EditDevice()
+    private void EditDevice(DeviceDefinition? device)
     {
-        if (SelectedDevice is null) { Notification.Show("请先选择一台设备。"); return; }
-        Editor.Open(SelectedDevice);
+        if (device is null) return;
+        Editor.Open(device);
         IsDeletePending = false;
     }
 
@@ -69,7 +75,7 @@ public partial class DevicesViewModel(ICollectorApiClient apiClient, Notificatio
     [RelayCommand]
     private void RequestDeleteDevice()
     {
-        if (SelectedDevice is null) Notification.Show("请先选择一台设备。");
+        if (!HasCheckedDevices) Notification.Show("请先勾选要删除的设备。");
         else IsDeletePending = true;
     }
 
@@ -79,14 +85,29 @@ public partial class DevicesViewModel(ICollectorApiClient apiClient, Notificatio
     [RelayCommand]
     private async Task ConfirmDeleteDeviceAsync()
     {
-        if (SelectedDevice is null) return;
-        Guid id = SelectedDevice.Id;
+        DeviceDefinition[] selected = DeviceRows.Where(static row => row.IsChecked).Select(static row => row.Item).ToArray();
+        if (selected.Length == 0) return;
         await RunOperationAsync(async token =>
         {
-            await apiClient.DeleteDeviceAsync(id, token);
+            int deleted = 0;
+            List<string> failures = [];
+            foreach (DeviceDefinition device in selected)
+            {
+                try
+                {
+                    await apiClient.DeleteDeviceAsync(device.Id, token);
+                    deleted++;
+                }
+                catch (CollectorApiException exception)
+                {
+                    failures.Add($"{device.Name}：{exception.Message}");
+                }
+            }
             IsDeletePending = false;
-            Notification.Show("设备已删除。");
             await LoadAsync(token);
+            Notification.Show(failures.Count == 0
+                ? $"已删除 {deleted} 台设备。"
+                : $"已删除 {deleted} 台设备，{failures.Count} 台删除失败。{string.Join(' ', failures)}");
         });
     }
 
@@ -97,7 +118,9 @@ public partial class DevicesViewModel(ICollectorApiClient apiClient, Notificatio
         {
             IReadOnlyList<DeviceDefinition> devices = await apiClient.GetDevicesAsync(cancellationToken);
             Replace(Devices, devices);
+            ReplaceRows(DeviceRows, devices);
             SelectedDevice = null;
+            SelectedDeviceRow = null;
         }
         finally { IsBusy = false; }
     }
@@ -106,5 +129,34 @@ public partial class DevicesViewModel(ICollectorApiClient apiClient, Notificatio
     {
         target.Clear();
         foreach (T item in source) target.Add(item);
+    }
+
+    /// <summary>同步表格行包装器并监听批量勾选状态。</summary>
+    private void ReplaceRows(ObservableCollection<SelectableRow<DeviceDefinition>> target, IEnumerable<DeviceDefinition> source)
+    {
+        foreach (SelectableRow<DeviceDefinition> row in target) row.PropertyChanged -= OnRowPropertyChanged;
+        target.Clear();
+        foreach (DeviceDefinition device in source)
+        {
+            SelectableRow<DeviceDefinition> row = new(device);
+            row.PropertyChanged += OnRowPropertyChanged;
+            target.Add(row);
+        }
+        NotifyCheckedStateChanged();
+    }
+
+    /// <summary>当前焦点行变化时保持连接测试所需的设备选择。</summary>
+    partial void OnSelectedDeviceRowChanged(SelectableRow<DeviceDefinition>? value) => SelectedDevice = value?.Item;
+
+    /// <summary>复选框变化后刷新删除按钮状态和确认数量。</summary>
+    private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SelectableRow<DeviceDefinition>.IsChecked)) NotifyCheckedStateChanged();
+    }
+
+    private void NotifyCheckedStateChanged()
+    {
+        OnPropertyChanged(nameof(CheckedDeviceCount));
+        OnPropertyChanged(nameof(HasCheckedDevices));
     }
 }

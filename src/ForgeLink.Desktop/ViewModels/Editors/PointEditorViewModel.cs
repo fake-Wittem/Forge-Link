@@ -1,6 +1,7 @@
 // 文件说明：封装点位新增和编辑表单状态及领域校验。
 // 责任边界：不调用服务 API，不管理点位列表或 CSV。
 
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ForgeLink.Domain;
 
@@ -9,8 +10,10 @@ namespace ForgeLink.Desktop.ViewModels.Editors;
 /// <summary>表示点位编辑表单。</summary>
 public partial class PointEditorViewModel : ObservableObject
 {
+    private IReadOnlyList<PointDefinition> _knownPoints = [];
     [ObservableProperty] private Guid _id;
     [ObservableProperty] private Guid _deviceId;
+    [ObservableProperty] private DeviceDefinition? _selectedDevice;
     [ObservableProperty] private string _code = string.Empty;
     [ObservableProperty] private string _name = string.Empty;
     [ObservableProperty] private string _address = string.Empty;
@@ -18,6 +21,7 @@ public partial class PointEditorViewModel : ObservableObject
     [ObservableProperty] private double _scale = 1D;
     [ObservableProperty] private double _offset;
     [ObservableProperty] private string _unit = string.Empty;
+    [ObservableProperty] private string _groupName = string.Empty;
     [ObservableProperty] private int _intervalMs = 1000;
     [ObservableProperty] private double _deadband;
     [ObservableProperty] private HistoryRecordMode _historyMode = HistoryRecordMode.ChangeWithHeartbeat;
@@ -33,11 +37,14 @@ public partial class PointEditorViewModel : ObservableObject
     public IReadOnlyList<HistoryRecordMode> HistoryModes { get; } = Enum.GetValues<HistoryRecordMode>();
     public IReadOnlyList<RegisterByteOrder> ByteOrders { get; } = Enum.GetValues<RegisterByteOrder>();
     public IReadOnlyList<RegisterWordOrder> WordOrders { get; } = Enum.GetValues<RegisterWordOrder>();
+    public ObservableCollection<string> GroupSuggestions { get; } = [];
 
     /// <summary>重置为指定设备下的新增点位默认值。</summary>
-    public void OpenNew(Guid firstDeviceId)
+    public void OpenNew(DeviceDefinition firstDevice, IEnumerable<PointDefinition> points)
     {
-        Id = Guid.Empty; DeviceId = firstDeviceId; Code = string.Empty; Name = string.Empty; Address = string.Empty;
+        _knownPoints = points.ToArray();
+        Id = Guid.Empty; SelectedDevice = firstDevice; Code = string.Empty; Name = string.Empty; Address = string.Empty;
+        GroupName = string.Empty;
         DataType = PointDataType.Double; Scale = 1D; Offset = 0D; Unit = string.Empty; IntervalMs = 1000;
         Deadband = 0D; HistoryMode = HistoryRecordMode.ChangeWithHeartbeat; IsEnabled = true; AllowWrite = false;
         ByteOrder = RegisterByteOrder.BigEndian; WordOrder = RegisterWordOrder.HighWordFirst; StringLength = 0;
@@ -45,13 +52,30 @@ public partial class PointEditorViewModel : ObservableObject
     }
 
     /// <summary>加载已有点位。</summary>
-    public void Open(PointDefinition point)
+    public void Open(PointDefinition point, IEnumerable<DeviceDefinition> devices, IEnumerable<PointDefinition> points)
     {
-        Id = point.Id; DeviceId = point.DeviceId; Code = point.Code; Name = point.Name; Address = point.Address;
+        _knownPoints = points.ToArray();
+        Id = point.Id; DeviceId = point.DeviceId;
+        SelectedDevice = devices.FirstOrDefault(device => device.Id == point.DeviceId);
+        Code = point.Code; Name = point.Name; Address = point.Address; GroupName = point.GroupName;
         DataType = point.DataType; Scale = point.Scale; Offset = point.Offset; Unit = point.Unit;
         IntervalMs = point.ScanIntervalMs; Deadband = point.Deadband; HistoryMode = point.HistoryMode;
         IsEnabled = point.IsEnabled; AllowWrite = point.AllowWrite; ByteOrder = point.ByteOrder;
         WordOrder = point.WordOrder; StringLength = point.StringLength; IsNew = false; IsOpen = true;
+    }
+
+    /// <summary>选择设备时同步领域模型使用的稳定设备 ID。</summary>
+    partial void OnSelectedDeviceChanged(DeviceDefinition? value)
+    {
+        DeviceId = value?.Id ?? Guid.Empty;
+        GroupSuggestions.Clear();
+        if (value is null) return;
+        foreach (string group in _knownPoints.Where(point => point.DeviceId == value.Id)
+                     .Select(static point => point.GroupName.Trim())
+                     .Where(static group => group.Length > 0)
+                     .Distinct(StringComparer.OrdinalIgnoreCase)
+                     .OrderBy(static group => group, StringComparer.CurrentCultureIgnoreCase))
+            GroupSuggestions.Add(group);
     }
 
     /// <summary>构造领域点位并返回全部校验错误。</summary>
@@ -59,7 +83,7 @@ public partial class PointEditorViewModel : ObservableObject
     {
         PointDefinition point = new(IsNew ? Guid.NewGuid() : Id, DeviceId, Code.Trim(), Name.Trim(), Address.Trim(),
             DataType, Scale, Offset, Unit.Trim(), IntervalMs, Deadband, HistoryMode, IsEnabled, AllowWrite,
-            ByteOrder, WordOrder, StringLength);
+            ByteOrder, WordOrder, StringLength, GroupName.Trim());
         return (point, point.Validate());
     }
 }

@@ -37,6 +37,18 @@ public sealed class ModbusValueDecoderTests
         Assert.Equal((ushort)0x1234, decoder.DecodeRegisters([0x3412], 0, point, 1));
     }
 
+    /// <summary>确认 PLC 字符串在首个 NUL 结束，后续寄存器填充值不会进入历史文本。</summary>
+    [Fact]
+    public void DecodeRegisters_ShouldStopStringAtFirstNullByte()
+    {
+        ModbusValueDecoder decoder = new();
+        PointDefinition point = CreatePoint(PointDataType.String) with { StringLength = 4 };
+
+        object value = decoder.DecodeRegisters([0x002B, 0x4142], 0, point, 2);
+
+        Assert.Equal(string.Empty, value);
+    }
+
     /// <summary>创建默认寄存器顺序的测试点位。</summary>
     private static PointDefinition CreatePoint(PointDataType type) => new(
         Guid.NewGuid(), Guid.NewGuid(), "P", "P", "HR:0", type, 1, 0, "", 1000, 0,

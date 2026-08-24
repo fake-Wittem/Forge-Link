@@ -4,7 +4,8 @@
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:controls="clr-namespace:ForgeLink.Desktop.Controls">
+                    xmlns:controls="clr-namespace:ForgeLink.Desktop.Controls"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <Color x:Key="ForgePrimaryColor">#2563EB</Color>
     <SolidColorBrush x:Key="ForgePrimaryBrush" Color="{StaticResource ForgePrimaryColor}" />
     <SolidColorBrush x:Key="ForgeCanvasBrush" Color="#F4F7FB" />
@@ -13,7 +14,13 @@
     <SolidColorBrush x:Key="ForgeWarningBrush" Color="#D97706" />
     <SolidColorBrush x:Key="ForgeDangerBrush" Color="#DC2626" />
     <Thickness x:Key="PagePadding">28</Thickness>
+    <DropShadowEffect x:Key="ForgeModalShadow" BlurRadius="28" ShadowDepth="8" Opacity="0.28" Color="#0F172A" />
     <Style TargetType="{x:Type controls:ForgeComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}" />
+    <Style x:Key="ForgeModalOverlayStyle" TargetType="Grid">
+        <Setter Property="Background" Value="#730F172A" />
+        <Setter Property="Panel.ZIndex" Value="100" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
     <Style x:Key="PageTitleStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -91,6 +98,60 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style x:Key="ForgeTableTextWithTooltipStyle" TargetType="TextBlock" BasedOn="{StaticResource ForgeTableTextStyle}">
+        <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
+        <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+        <Setter Property="ToolTipService.ShowDuration" Value="30000" />
+    </Style>
+    <Style x:Key="ForgeTableLinkButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
+        <Setter Property="Padding" Value="4,2" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="TextBlock.TextAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    </Style>
+    <Style x:Key="ForgeDangerButtonStyle" TargetType="{x:Type ui:Button}">
+        <Setter Property="Background" Value="{StaticResource ForgeDangerBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeDangerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ui:Button}">
+                    <Border x:Name="DangerButtonBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions><Condition Property="IsEnabled" Value="True" /><Condition Property="IsMouseOver" Value="True" /></MultiTrigger.Conditions>
+                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#B91C1C" />
+                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#B91C1C" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions><Condition Property="IsEnabled" Value="True" /><Condition Property="IsPressed" Value="True" /></MultiTrigger.Conditions>
+                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#991B1B" />
+                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#991B1B" />
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#FEE2E2" />
+                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#FCA5A5" />
+                            <Setter Property="Foreground" Value="#991B1B" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style x:Key="ForgeTableSwitchStyle" TargetType="CheckBox">
         <Setter Property="Width" Value="36" />

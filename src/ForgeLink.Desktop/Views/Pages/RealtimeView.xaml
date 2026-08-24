@@ -7,17 +7,35 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
         <StackPanel><TextBlock Text="实时数据" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="仅在当前页面激活时每秒批量刷新" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
         <ui:InfoBar Grid.Row="1" Margin="0,0,0,12" Title="刷新失败" Message="{Binding ErrorMessage}" Severity="Warning" IsOpen="{Binding ErrorMessage, Converter={StaticResource StringVisibility}}" />
-        <Border Grid.Row="2" Style="{StaticResource ForgeTableSurfaceStyle}">
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,12,0" VerticalAlignment="Top">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <TextBlock Text="设备" FontWeight="SemiBold" Foreground="#334155" Margin="4,2,4,8" />
+                    <ListBox Grid.Row="1" ItemsSource="{Binding DeviceFilters}" SelectedItem="{Binding SelectedDeviceFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="220" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding Device.Name}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Grid.Row="2" Text="点位分组" FontWeight="SemiBold" Foreground="#334155" Margin="4,18,4,8" />
+                    <ListBox Grid.Row="3" ItemsSource="{Binding PointGroupFilters}" SelectedItem="{Binding SelectedPointGroupFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="260" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource ForgeTableSurfaceStyle}">
             <DataGrid ItemsSource="{Binding Values}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="点位 ID" Binding="{Binding PointId}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
-                    <DataGridTextColumn Header="工程值" Binding="{Binding EngineeringValue}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                    <DataGridTextColumn Header="单位" Binding="{Binding Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                    <DataGridTextColumn Header="质量" Binding="{Binding Quality}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                    <DataGridTextColumn Header="采集时间 (UTC)" Binding="{Binding CollectTimestampUtc}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
-                    <DataGridTextColumn Header="序号" Binding="{Binding SequenceNumber}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="点位编码" Binding="{Binding Point.Code}" ElementStyle="{StaticResource ForgeTableTextWithTooltipStyle}" Width="*" />
+                    <DataGridTextColumn Header="点位名称" Binding="{Binding Point.Name}" ElementStyle="{StaticResource ForgeTableTextWithTooltipStyle}" Width="*" />
+                    <DataGridTextColumn Header="分组" Binding="{Binding Point.GroupName, Converter={StaticResource GroupNameDisplay}}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="工程值" Binding="{Binding Value.EngineeringValue}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="单位" Binding="{Binding Value.Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="质量" Binding="{Binding Value.Quality}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                    <DataGridTextColumn Header="采集时间" Binding="{Binding Value.CollectTimestampUtc, Converter={StaticResource LocalDateTime}}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                    <DataGridTextColumn Binding="{Binding Value.SequenceNumber}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*"><DataGridTextColumn.Header><TextBlock Text="采集序号" ToolTip="Collector Service 本次启动期间，每产生一个点位值就递增一次；重启服务后重新计数。" /></DataGridTextColumn.Header></DataGridTextColumn>
                 </DataGrid.Columns>
             </DataGrid>
-        </Border>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

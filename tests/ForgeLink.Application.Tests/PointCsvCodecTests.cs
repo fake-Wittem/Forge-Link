@@ -16,7 +16,7 @@ public sealed class PointCsvCodecTests
     {
         PointDefinition expected = new(Guid.NewGuid(), Guid.NewGuid(), "TEMP,01", "入口\"温度\"\r\n主测点",
             "D100", PointDataType.Double, 0.1, -2, "°C", 1000, 0.2,
-            HistoryRecordMode.ChangeWithHeartbeat, true, false);
+            HistoryRecordMode.ChangeWithHeartbeat, true, false, GroupName: "温控,主线");
         PointCsvCodec codec = new();
         PointCsvParseResult result = codec.Parse(codec.Export([expected]));
         Assert.Empty(result.Errors);
@@ -32,5 +32,18 @@ public sealed class PointCsvCodecTests
         PointCsvParseResult result = codec.Parse(csv);
         Assert.Empty(result.Points);
         Assert.Contains("第 2 行", Assert.Single(result.Errors), StringComparison.Ordinal);
+    }
+
+    /// <summary>确认旧版 CSV 缺少分组列时仍可导入并归入未分组。</summary>
+    [Fact]
+    public void Parse_ShouldAcceptLegacyHeaderWithoutGroupName()
+    {
+        PointCsvCodec codec = new();
+        string csv = $"Id,DeviceId,Code,Name,Address,DataType,Scale,Offset,Unit,ScanIntervalMs,Deadband,HistoryMode,IsEnabled,AllowWrite,ByteOrder,WordOrder,StringLength\r\n{Guid.NewGuid():D},{Guid.NewGuid():D},TEMP_01,温度,D100,Double,1,0,°C,1000,0,None,True,False,BigEndian,HighWordFirst,0";
+
+        PointCsvParseResult result = codec.Parse(csv);
+
+        Assert.Empty(result.Errors);
+        Assert.Equal(string.Empty, Assert.Single(result.Points).GroupName);
     }
 }

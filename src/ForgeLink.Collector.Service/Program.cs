@@ -305,10 +305,12 @@ internal sealed record PointUpdateRequest(
     bool AllowWrite,
     ForgeLink.Domain.RegisterByteOrder ByteOrder = ForgeLink.Domain.RegisterByteOrder.BigEndian,
     ForgeLink.Domain.RegisterWordOrder WordOrder = ForgeLink.Domain.RegisterWordOrder.HighWordFirst,
-    int StringLength = 0)
+    int StringLength = 0,
+    string GroupName = "")
 {
     /// <summary>转换为领域点位配置。</summary>
     internal ForgeLink.Domain.PointDefinition ToDomain() => new(
         Id, DeviceId, Code, Name, Address, DataType, Scale, Offset, Unit,
-        ScanIntervalMs, Deadband, HistoryMode, IsEnabled, AllowWrite, ByteOrder, WordOrder, StringLength);
+        ScanIntervalMs, Deadband, HistoryMode, IsEnabled, AllowWrite, ByteOrder, WordOrder, StringLength,
+        GroupName.Trim());
 }

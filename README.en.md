@@ -18,7 +18,8 @@ ForgeLink is a PLC data collection and forwarding system for Windows x64 industr
 - A simulated PLC driver for end-to-end demos without field equipment.
 - An NModbus-based Modbus TCP driver with address areas, contiguous batch reads, Unit ID, timeouts, and register ordering;
 - Full device/point CRUD, protected deletion, connection tests, and runtime hot reload;
-- Point CSV import/export with transaction rollback and quoted-field support.
+- Point management grouped by device, with per-device custom groups and an ungrouped filter;
+- Point CSV import/export with group fields, legacy-format compatibility, transaction rollback, and quoted-field support.
 - A TDengine settings page with DPAPI-backed password storage, redacted reads, full connection testing, and explicit enable/disable controls;
 - Six point-history policies, a 100,000-value/10-minute bounded memory buffer, 1,000-value batch writes, exponential retry, and gap metrics;
 - A seven-day-bounded history query API plus Desktop numeric trend preview and virtualized details;

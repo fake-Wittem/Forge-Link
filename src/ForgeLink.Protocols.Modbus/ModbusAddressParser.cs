@@ -11,7 +11,7 @@ public enum ModbusArea { Coil, DiscreteInput, HoldingRegister, InputRegister }
 /// <summary>表示已经归一化的零基 Modbus 地址。</summary>
 public readonly record struct ModbusAddress(ModbusArea Area, ushort Offset);
 
-/// <summary>提供显式前缀地址和常见五位参考地址解析。</summary>
+/// <summary>提供零基保持寄存器偏移、显式前缀地址和常见五位参考地址解析。</summary>
 public sealed class ModbusAddressParser
 {
     /// <summary>解析地址；显式格式中的数字始终按零基偏移解释。</summary>
@@ -45,22 +45,30 @@ public sealed class ModbusAddressParser
             return true;
         }
 
-        if (normalized.Length != 5 || !int.TryParse(normalized, out int reference))
+        // 五位纯数字优先按 Modbus 参考地址处理，避免把不受支持的 20001 误判成保持寄存器偏移。
+        if (normalized.Length == 5 && int.TryParse(normalized, out int reference))
         {
-            error = "地址应使用 HR:0、IR:0、COIL:0、DI:0，或五位参考地址 00001/10001/30001/40001。";
-            return false;
+            if (reference is >= 1 and <= 9999) address = new(ModbusArea.Coil, checked((ushort)(reference - 1)));
+            else if (reference is >= 10001 and <= 19999) address = new(ModbusArea.DiscreteInput, checked((ushort)(reference - 10001)));
+            else if (reference is >= 30001 and <= 39999) address = new(ModbusArea.InputRegister, checked((ushort)(reference - 30001)));
+            else if (reference is >= 40001 and <= 49999) address = new(ModbusArea.HoldingRegister, checked((ushort)(reference - 40001)));
+            else if (reference is >= 20000 and <= 29999)
+            {
+                error = "该五位参考地址不属于支持的 Modbus 标准区域。";
+                return false;
+            }
+            if (reference is >= 1 and <= 19999 or >= 30001 and <= 49999) return true;
         }
 
-        if (reference is >= 1 and <= 9999) address = new(ModbusArea.Coil, checked((ushort)(reference - 1)));
-        else if (reference is >= 10001 and <= 19999) address = new(ModbusArea.DiscreteInput, checked((ushort)(reference - 10001)));
-        else if (reference is >= 30001 and <= 39999) address = new(ModbusArea.InputRegister, checked((ushort)(reference - 30001)));
-        else if (reference is >= 40001 and <= 49999) address = new(ModbusArea.HoldingRegister, checked((ushort)(reference - 40001)));
-        else
+        // 兼容常见配置习惯：无前缀纯数字表示 Holding Register 的零基偏移。
+        if (ushort.TryParse(normalized, out ushort holdingRegisterOffset))
         {
-            error = "该五位参考地址不属于支持的 Modbus 标准区域。";
-            return false;
+            address = new(ModbusArea.HoldingRegister, holdingRegisterOffset);
+            return true;
         }
-        return true;
+
+        error = "地址应使用零基保持寄存器偏移（如 0）、HR:0、IR:0、COIL:0、DI:0，或五位参考地址 00001/10001/30001/40001。";
+        return false;
     }
 
     /// <summary>根据点位数据类型计算需要读取的线圈或寄存器数量。</summary>

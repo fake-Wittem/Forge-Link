@@ -75,5 +75,24 @@ public static class TDengineSqlBuilder
         _ => Literal(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty)
     };
 
-    private static string Literal(string value) => $"'{value.Replace("'", "''", StringComparison.Ordinal)}'";
+    /// <summary>按 TDengine SQL 的反斜杠规则转义字符串字面量。</summary>
+    private static string Literal(string value)
+    {
+        StringBuilder escaped = new(value.Length + 8);
+        foreach (char character in value)
+        {
+            escaped.Append(character switch
+            {
+                '\\' => "\\\\",
+                '\'' => "\\'",
+                '\"' => "\\\"",
+                '\n' => "\\n",
+                '\r' => "\\r",
+                '\t' => "\\t",
+                _ when char.IsControl(character) => "\uFFFD",
+                _ => character.ToString()
+            });
+        }
+        return $"'{escaped}'";
+    }
 }

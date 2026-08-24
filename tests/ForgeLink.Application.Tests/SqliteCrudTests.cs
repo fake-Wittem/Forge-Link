@@ -58,6 +58,30 @@ public sealed class SqliteCrudTests
         }
     }
 
+    /// <summary>确认自定义点位分组能够持久化并在更新后保持。</summary>
+    [Fact]
+    public async Task SavePointAsync_ShouldPersistGroupName()
+    {
+        string path = CreateTemporaryDatabasePath();
+        try
+        {
+            CancellationToken token = TestContext.Current.CancellationToken;
+            SqliteConfigurationRepository repository = new(path);
+            await repository.InitializeAsync(token);
+            Guid deviceId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+            PointDefinition point = CreatePoint(Guid.NewGuid(), deviceId, "GROUP_TEST") with { GroupName = "空压系统" };
+
+            await repository.SavePointAsync(point, token);
+
+            PointDefinition stored = (await repository.GetPointsAsync(token)).Single(item => item.Id == point.Id);
+            Assert.Equal("空压系统", stored.GroupName);
+        }
+        finally
+        {
+            Cleanup(path);
+        }
+    }
+
     /// <summary>创建测试点位。</summary>
     private static PointDefinition CreatePoint(Guid id, Guid deviceId, string code) => new(
         id, deviceId, code, code, "D200", PointDataType.Double, 1, 0, "", 1000, 0,

@@ -51,7 +51,8 @@ public sealed record PointDefinition(
     bool AllowWrite,
     RegisterByteOrder ByteOrder = RegisterByteOrder.BigEndian,
     RegisterWordOrder WordOrder = RegisterWordOrder.HighWordFirst,
-    int StringLength = 0)
+    int StringLength = 0,
+    string GroupName = "")
 {
     /// <summary>校验点位配置并返回全部可修正错误。</summary>
     /// <returns>可直接展示的配置错误；空集合表示有效。</returns>
@@ -69,6 +70,7 @@ public sealed record PointDefinition(
         if (!double.IsFinite(Deadband) || Deadband < 0) errors.Add("死区值必须是大于或等于零的有限数值。");
         if (StringLength < 0) errors.Add("字符串长度不得小于零。");
         if (StringLength > 250) errors.Add("Modbus 单次读取的字符串长度不得超过 250 字节。");
+        if (GroupName.Length > 64) errors.Add("点位分组名称不得超过 64 个字符。");
         return errors;
     }
 
