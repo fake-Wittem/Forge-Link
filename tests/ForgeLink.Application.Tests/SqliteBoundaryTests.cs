@@ -73,6 +73,12 @@ public sealed class SqliteBoundaryTests
             Assert.Equal(3000, device.ConnectionTimeoutMs);
             Assert.Equal(ForgeLink.Domain.RegisterByteOrder.BigEndian, point.ByteOrder);
             Assert.Equal(ForgeLink.Domain.RegisterWordOrder.HighWordFirst, point.WordOrder);
+            Assert.Equal(string.Empty, point.GroupName);
+            await using SqliteConnection migrated = new($"Data Source={databasePath};Pooling=False");
+            await migrated.OpenAsync(token);
+            await using SqliteCommand versionCommand = migrated.CreateCommand();
+            versionCommand.CommandText = "SELECT version FROM schema_version";
+            Assert.Equal(5L, await versionCommand.ExecuteScalarAsync(token));
         }
         finally
         {

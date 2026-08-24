@@ -18,6 +18,9 @@
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanVisibility" />
             <converters:StringToVisibilityConverter x:Key="StringVisibility" />
+            <converters:PointOptionDescriptionConverter x:Key="PointOptionDescription" />
+            <converters:GroupNameDisplayConverter x:Key="GroupNameDisplay" />
+            <converters:LocalDateTimeConverter x:Key="LocalDateTime" />
             <DataTemplate DataType="{x:Type pageModels:OverviewViewModel}"><pages:OverviewView /></DataTemplate>
             <DataTemplate DataType="{x:Type pageModels:DevicesViewModel}"><pages:DevicesView /></DataTemplate>
             <DataTemplate DataType="{x:Type pageModels:PointsViewModel}"><pages:PointsView /></DataTemplate>

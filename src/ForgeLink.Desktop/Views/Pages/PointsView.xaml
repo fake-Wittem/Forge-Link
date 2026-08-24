@@ -6,27 +6,44 @@
              xmlns:editors="clr-namespace:ForgeLink.Desktop.Views.Editors">
     <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-        <StackPanel><TextBlock Text="点位管理" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="稳定 ID、工程换算、历史策略、CSV 与写入白名单" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12"><ui:Button Content="新增点位" Command="{Binding NewPointCommand}" Appearance="Primary" Margin="0,0,8,0" /><ui:Button Content="编辑" Command="{Binding EditPointCommand}" Margin="0,0,8,0" /><ui:Button Content="删除" Command="{Binding RequestDeletePointCommand}" Margin="0,0,8,0" /><ui:Button Content="导入 CSV" Command="{Binding ImportPointsCommand}" Margin="0,0,8,0" /><ui:Button Content="导出 CSV" Command="{Binding ExportPointsCommand}" /></StackPanel>
+        <StackPanel><TextBlock Text="点位管理" Style="{StaticResource PageTitleStyle}" /><TextBlock Text="按设备与自定义分组维护点位、历史策略、CSV 与写入白名单" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,18" /></StackPanel>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12"><ui:Button Content="新增点位" Command="{Binding NewPointCommand}" Appearance="Primary" Margin="0,0,8,0" /><ui:Button Content="批量删除" Command="{Binding RequestDeletePointCommand}" IsEnabled="{Binding HasCheckedPoints}" Style="{StaticResource ForgeDangerButtonStyle}" Margin="0,0,8,0" /><ui:Button Content="导入 CSV" Command="{Binding ImportPointsCommand}" Margin="0,0,8,0" /><ui:Button Content="导出 CSV" Command="{Binding ExportPointsCommand}" /></StackPanel>
         <ui:InfoBar Grid.Row="2" Margin="0,0,0,12" Title="配置操作" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" />
         <Grid Grid.Row="3" VerticalAlignment="Stretch">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Style="{StaticResource ForgeTableSurfaceStyle}" Margin="0,0,12,0">
-                <DataGrid ItemsSource="{Binding Points}" SelectedItem="{Binding SelectedPoint}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,12,0" VerticalAlignment="Top">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <TextBlock Text="设备" FontWeight="SemiBold" Foreground="#334155" Margin="4,2,4,8" />
+                    <ListBox Grid.Row="1" ItemsSource="{Binding DeviceFilters}" SelectedItem="{Binding SelectedDeviceFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="220" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding Device.Name}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Grid.Row="2" Text="点位分组" FontWeight="SemiBold" Foreground="#334155" Margin="4,18,4,8" />
+                    <ListBox Grid.Row="3" ItemsSource="{Binding PointGroupFilters}" SelectedItem="{Binding SelectedPointGroupFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="260" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource ForgeTableSurfaceStyle}" Margin="0,0,12,0">
+                <DataGrid ItemsSource="{Binding VisiblePointRows}" SelectedItem="{Binding SelectedPointRow}" AutoGenerateColumns="False" IsReadOnly="True" EnableRowVirtualization="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="编码" Binding="{Binding Code}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                        <DataGridTextColumn Header="名称" Binding="{Binding Name}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
-                        <DataGridTextColumn Header="地址" Binding="{Binding Address}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                        <DataGridTextColumn Header="类型" Binding="{Binding DataType}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                        <DataGridTextColumn Header="缩放" Binding="{Binding Scale}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                        <DataGridTextColumn Header="单位" Binding="{Binding Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
-                        <DataGridTextColumn Header="历史模式" Binding="{Binding HistoryMode}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
-                        <DataGridCheckBoxColumn Header="允许写入" Binding="{Binding AllowWrite}" ElementStyle="{StaticResource ForgeTableSwitchStyle}" Width="*" />
+                        <DataGridTemplateColumn Header="" Width="44"><DataGridTemplateColumn.CellTemplate><DataTemplate><CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center" /></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="编码" Width="*"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Command="{Binding DataContext.EditPointCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding Item}" Style="{StaticResource ForgeTableLinkButtonStyle}" ToolTip="{Binding Item.Code}"><TextBlock Text="{Binding Item.Code}" TextTrimming="CharacterEllipsis" TextAlignment="Center" HorizontalAlignment="Stretch" /></Button></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                        <DataGridTextColumn Header="名称" Binding="{Binding Item.Name}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="2*" />
+                        <DataGridTextColumn Header="分组" Binding="{Binding Item.GroupName, Converter={StaticResource GroupNameDisplay}}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="地址" Binding="{Binding Item.Address}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="类型" Binding="{Binding Item.DataType}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="缩放" Binding="{Binding Item.Scale}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="单位" Binding="{Binding Item.Unit}" ElementStyle="{StaticResource ForgeTableTextStyle}" Width="*" />
+                        <DataGridTextColumn Header="历史模式" Binding="{Binding Item.HistoryMode, Converter={StaticResource PointOptionDescription}}" ElementStyle="{StaticResource ForgeTableTextWithTooltipStyle}" Width="2*" />
+                        <DataGridCheckBoxColumn Header="允许写入" Binding="{Binding Item.AllowWrite}" ElementStyle="{StaticResource ForgeTableSwitchStyle}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
-            <editors:PointEditorView Grid.Column="1" VerticalAlignment="Top" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}" />
-            <Border Grid.ColumnSpan="2" VerticalAlignment="Bottom" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="8" Padding="14" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock Text="确认删除选中的点位？删除后实时缓存会在后续刷新中移除。" VerticalAlignment="Center" /><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeletePointCommand}" Margin="12,0,8,0" /><ui:Button Content="确认删除" Command="{Binding ConfirmDeletePointCommand}" Appearance="Primary" /></StackPanel></DockPanel></Border>
+            <Border Grid.ColumnSpan="2" VerticalAlignment="Bottom" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="8" Padding="14" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock VerticalAlignment="Center"><Run Text="确认删除已勾选的 " /><Run Text="{Binding CheckedPointCount, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 个点位？删除后实时缓存会在后续刷新中移除。" /></TextBlock><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeletePointCommand}" Margin="12,0,8,0" /><ui:Button Content="确认批量删除" Command="{Binding ConfirmDeletePointCommand}" Style="{StaticResource ForgeDangerButtonStyle}" /></StackPanel></DockPanel></Border>
+        </Grid>
+        <Grid Grid.RowSpan="4" Margin="-28" Style="{StaticResource ForgeModalOverlayStyle}" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}">
+            <editors:PointEditorView HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="680" Margin="32" />
         </Grid>
     </Grid>
 </UserControl>

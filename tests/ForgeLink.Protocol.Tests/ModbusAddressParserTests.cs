@@ -11,6 +11,9 @@ public sealed class ModbusAddressParserTests
 {
     /// <summary>确认显式零基格式和五位参考格式映射到相同区域偏移。</summary>
     [Theory]
+    [InlineData("0", ModbusArea.HoldingRegister, 0)]
+    [InlineData("2", ModbusArea.HoldingRegister, 2)]
+    [InlineData("65535", ModbusArea.HoldingRegister, 65535)]
     [InlineData("HR:0", ModbusArea.HoldingRegister, 0)]
     [InlineData("40001", ModbusArea.HoldingRegister, 0)]
     [InlineData("IR:8", ModbusArea.InputRegister, 8)]
