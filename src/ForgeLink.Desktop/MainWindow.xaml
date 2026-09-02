@@ -8,18 +8,19 @@
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  Title="ForgeLink" Width="1360" Height="820" MinWidth="1080" MinHeight="680"
                  WindowStartupLocation="CenterScreen" Background="{StaticResource ForgeCanvasBrush}"
+                 Foreground="{StaticResource ForgeTextBrush}"
                  ExtendsContentIntoTitleBar="True">
     <Grid>
         <Grid.RowDefinitions><RowDefinition Height="48" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-        <ui:TitleBar Grid.Row="0" Title="ForgeLink" ShowMinimize="True" ShowMaximize="True" ShowClose="True" />
+        <ui:TitleBar Grid.Row="0" Title="ForgeLink" Background="{StaticResource ForgeSidebarBrush}" Foreground="{StaticResource ForgeTextBrush}" ShowMinimize="True" ShowMaximize="True" ShowClose="True" />
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions><ColumnDefinition Width="232" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{StaticResource ForgeSidebarBrush}" BorderBrush="{StaticResource ForgeBorderBrush}" BorderThickness="0,0,1,0">
                 <Grid Margin="16,18">
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="8,0,0,22">
                         <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource ForgePrimaryBrush}">
-                            <TextBlock Text="F" Foreground="White" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Text="F" Foreground="{StaticResource ForgeSurfaceBrush}" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="ForgeLink" FontWeight="SemiBold" FontSize="16" />
@@ -51,7 +52,9 @@
                     </ui:Card>
                 </Grid>
             </Border>
-            <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+            <Border Grid.Column="1" Background="{StaticResource ForgeCanvasBrush}">
+                <ContentControl Content="{Binding CurrentPage}" />
+            </Border>
         </Grid>
     </Grid>
 </ui:FluentWindow>

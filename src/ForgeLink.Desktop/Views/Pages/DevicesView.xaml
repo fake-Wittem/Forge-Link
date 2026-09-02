@@ -24,9 +24,9 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
-            <Border VerticalAlignment="Bottom" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="8" Padding="14" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock VerticalAlignment="Center"><Run Text="确认删除已勾选的 " /><Run Text="{Binding CheckedDeviceCount, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 台设备？存在关联点位时服务端会拒绝对应设备。" /></TextBlock><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeleteDeviceCommand}" Margin="12,0,8,0" /><ui:Button Content="确认批量删除" Command="{Binding ConfirmDeleteDeviceCommand}" Style="{StaticResource ForgeDangerButtonStyle}" /></StackPanel></DockPanel></Border>
+            <Border VerticalAlignment="Bottom" Style="{StaticResource ForgeConfirmationBarStyle}" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock VerticalAlignment="Center"><Run Text="确认删除已勾选的 " /><Run Text="{Binding CheckedDeviceCount, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 台设备？存在关联点位时服务端会拒绝对应设备。" /></TextBlock><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeleteDeviceCommand}" Margin="12,0,8,0" /><ui:Button Content="确认批量删除" Command="{Binding ConfirmDeleteDeviceCommand}" Style="{StaticResource ForgeDangerButtonStyle}" /></StackPanel></DockPanel></Border>
         </Grid>
-        <Grid Grid.RowSpan="4" Margin="-28" Style="{StaticResource ForgeModalOverlayStyle}" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}">
+        <Grid Grid.RowSpan="4" Margin="-28" Style="{StaticResource ForgeModalOverlayStyle}" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}" MouseLeftButtonDown="ModalOverlay_MouseLeftButtonDown">
             <editors:DeviceEditorView HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="640" Margin="32" />
         </Grid>
     </Grid>

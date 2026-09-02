@@ -31,19 +31,19 @@
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <TextBlock Text="设备在线率" FontWeight="Medium" />
                             <TextBlock Text="{Binding Status.OnlineRate, StringFormat={}{0:F1}%}" HorizontalAlignment="Right" Foreground="{StaticResource ForgePrimaryBrush}" FontWeight="SemiBold" />
-                            <ProgressBar Grid.Row="1" Value="{Binding Status.OnlineRate}" Maximum="100" Height="10" Margin="0,7,0,0" Foreground="{StaticResource ForgePrimaryBrush}" Background="#E2E8F0" />
+                            <ProgressBar Grid.Row="1" Value="{Binding Status.OnlineRate}" Maximum="100" Height="10" Margin="0,7,0,0" Foreground="{StaticResource ForgePrimaryBrush}" Background="{StaticResource ForgeBorderSoftBrush}" />
                         </Grid>
                         <Grid Margin="0,0,0,16">
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <TextBlock Text="采集成功率" FontWeight="Medium" />
                             <TextBlock Text="{Binding Status.SuccessRate, StringFormat={}{0:F1}%}" HorizontalAlignment="Right" Foreground="{StaticResource ForgeSuccessBrush}" FontWeight="SemiBold" />
-                            <ProgressBar Grid.Row="1" Value="{Binding Status.SuccessRate}" Maximum="100" Height="10" Margin="0,7,0,0" Foreground="{StaticResource ForgeSuccessBrush}" Background="#E2E8F0" />
+                            <ProgressBar Grid.Row="1" Value="{Binding Status.SuccessRate}" Maximum="100" Height="10" Margin="0,7,0,0" Foreground="{StaticResource ForgeSuccessBrush}" Background="{StaticResource ForgeBorderSoftBrush}" />
                         </Grid>
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <TextBlock Text="实时缓存覆盖率" FontWeight="Medium" />
                             <TextBlock Text="{Binding Status.CacheCoverageRate, StringFormat={}{0:F1}%}" HorizontalAlignment="Right" Foreground="{StaticResource ForgeWarningBrush}" FontWeight="SemiBold" />
-                            <ProgressBar Grid.Row="1" Value="{Binding Status.CacheCoverageRate}" Maximum="100" Height="10" Margin="0,7,0,0" Foreground="{StaticResource ForgeWarningBrush}" Background="#E2E8F0" />
+                            <ProgressBar Grid.Row="1" Value="{Binding Status.CacheCoverageRate}" Maximum="100" Height="10" Margin="0,7,0,0" Foreground="{StaticResource ForgeWarningBrush}" Background="{StaticResource ForgeBorderSoftBrush}" />
                         </Grid>
                     </StackPanel>
                 </ui:Card>
@@ -56,7 +56,7 @@
                             <StackPanel><TextBlock Text="采集总量" Style="{StaticResource MutedTextStyle}" /><TextBlock Text="{Binding Status.CollectedValueCount, StringFormat={}{0:N0}}" FontSize="24" FontWeight="SemiBold" Margin="0,5,0,0" /></StackPanel>
                             <StackPanel Grid.Column="1"><TextBlock Text="失败次数" Style="{StaticResource MutedTextStyle}" /><TextBlock Text="{Binding Status.FailedValueCount, StringFormat={}{0:N0}}" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource ForgeDangerBrush}" Margin="0,5,0,0" /></StackPanel>
                         </Grid>
-                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,18,0,0"><DockPanel><TextBlock Text="管道积压" Style="{StaticResource MutedTextStyle}" /><TextBlock DockPanel.Dock="Right" Text="{Binding Status.PipelineBacklog, StringFormat={}{0:N0} 条}" FontWeight="SemiBold" HorizontalAlignment="Right" /></DockPanel></Border>
+                        <Border Style="{StaticResource ForgeInsetSurfaceStyle}" Padding="12" Margin="0,18,0,0"><DockPanel><TextBlock Text="管道积压" Style="{StaticResource MutedTextStyle}" /><TextBlock DockPanel.Dock="Right" Text="{Binding Status.PipelineBacklog, StringFormat={}{0:N0} 条}" FontWeight="SemiBold" HorizontalAlignment="Right" /></DockPanel></Border>
                     </StackPanel>
                 </ui:Card>
             </Grid>

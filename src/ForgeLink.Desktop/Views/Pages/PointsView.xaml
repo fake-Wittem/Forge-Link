@@ -11,14 +11,14 @@
         <ui:InfoBar Grid.Row="2" Margin="0,0,0,12" Title="配置操作" Message="{Binding Messages.Message}" Severity="Informational" IsOpen="{Binding Messages.HasMessage}" />
         <Grid Grid.Row="3" VerticalAlignment="Stretch">
             <Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,12,0" VerticalAlignment="Top">
+            <Border Grid.Column="0" Style="{StaticResource ForgeSidePanelStyle}" Margin="0,0,12,0">
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <TextBlock Text="设备" FontWeight="SemiBold" Foreground="#334155" Margin="4,2,4,8" />
+                    <TextBlock Text="设备" FontWeight="SemiBold" Foreground="{StaticResource ForgePrimaryBrush}" Margin="4,2,4,8" />
                     <ListBox Grid.Row="1" ItemsSource="{Binding DeviceFilters}" SelectedItem="{Binding SelectedDeviceFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="220" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding Device.Name}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
                     </ListBox>
-                    <TextBlock Grid.Row="2" Text="点位分组" FontWeight="SemiBold" Foreground="#334155" Margin="4,18,4,8" />
+                    <TextBlock Grid.Row="2" Text="点位分组" FontWeight="SemiBold" Foreground="{StaticResource ForgePrimaryBrush}" Margin="4,18,4,8" />
                     <ListBox Grid.Row="3" ItemsSource="{Binding PointGroupFilters}" SelectedItem="{Binding SelectedPointGroupFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="260" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
                     </ListBox>
@@ -40,9 +40,9 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
-            <Border Grid.ColumnSpan="2" VerticalAlignment="Bottom" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="8" Padding="14" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock VerticalAlignment="Center"><Run Text="确认删除已勾选的 " /><Run Text="{Binding CheckedPointCount, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 个点位？删除后实时缓存会在后续刷新中移除。" /></TextBlock><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeletePointCommand}" Margin="12,0,8,0" /><ui:Button Content="确认批量删除" Command="{Binding ConfirmDeletePointCommand}" Style="{StaticResource ForgeDangerButtonStyle}" /></StackPanel></DockPanel></Border>
+            <Border Grid.ColumnSpan="2" VerticalAlignment="Bottom" Style="{StaticResource ForgeConfirmationBarStyle}" Visibility="{Binding IsDeletePending, Converter={StaticResource BooleanVisibility}}"><DockPanel><TextBlock VerticalAlignment="Center"><Run Text="确认删除已勾选的 " /><Run Text="{Binding CheckedPointCount, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 个点位？删除后实时缓存会在后续刷新中移除。" /></TextBlock><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><ui:Button Content="取消" Command="{Binding CancelDeletePointCommand}" Margin="12,0,8,0" /><ui:Button Content="确认批量删除" Command="{Binding ConfirmDeletePointCommand}" Style="{StaticResource ForgeDangerButtonStyle}" /></StackPanel></DockPanel></Border>
         </Grid>
-        <Grid Grid.RowSpan="4" Margin="-28" Style="{StaticResource ForgeModalOverlayStyle}" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}">
+        <Grid Grid.RowSpan="4" Margin="-28" Style="{StaticResource ForgeModalOverlayStyle}" Visibility="{Binding Editor.IsOpen, Converter={StaticResource BooleanVisibility}}" MouseLeftButtonDown="ModalOverlay_MouseLeftButtonDown">
             <editors:PointEditorView HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="680" Margin="32" />
         </Grid>
     </Grid>

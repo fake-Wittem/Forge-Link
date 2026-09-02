@@ -6,25 +6,186 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:ForgeLink.Desktop.Controls"
                     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
-    <Color x:Key="ForgePrimaryColor">#2563EB</Color>
+    <!-- 普鲁士蓝、奶杏与酒红组成的复古工业主题；语义状态色保持独立。 -->
+    <Color x:Key="ForgePrimaryColor">#123B52</Color>
+    <Color x:Key="ForgeAccentColor">#7A263A</Color>
+    <Color x:Key="ForgeAccentHoverColor">#641D2D</Color>
+    <Color x:Key="ForgeAccentPressedColor">#4F1624</Color>
+    <Color x:Key="ForgeInputColor">#F7FAF8</Color>
+    <Color x:Key="ForgeInputHoverColor">#F0F5F2</Color>
+    <Color x:Key="ForgeInputDisabledColor">#E8E0D3</Color>
+    <Color x:Key="ForgeInputBorderColor">#A9B6B3</Color>
+    <Color x:Key="ForgeSelectionSoftColor">#F1DCDD</Color>
     <SolidColorBrush x:Key="ForgePrimaryBrush" Color="{StaticResource ForgePrimaryColor}" />
-    <SolidColorBrush x:Key="ForgeCanvasBrush" Color="#F4F7FB" />
-    <SolidColorBrush x:Key="ForgeMutedBrush" Color="#64748B" />
-    <SolidColorBrush x:Key="ForgeSuccessBrush" Color="#059669" />
-    <SolidColorBrush x:Key="ForgeWarningBrush" Color="#D97706" />
-    <SolidColorBrush x:Key="ForgeDangerBrush" Color="#DC2626" />
+    <SolidColorBrush x:Key="ForgeAccentBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="ForgeCanvasBrush" Color="#F8F0E1" />
+    <SolidColorBrush x:Key="ForgeSidebarBrush" Color="#FBF4E7" />
+    <SolidColorBrush x:Key="ForgeSurfaceBrush" Color="#FFF9EE" />
+    <SolidColorBrush x:Key="ForgeSurfaceAltBrush" Color="#F4E7D1" />
+    <SolidColorBrush x:Key="ForgeSurfaceHoverBrush" Color="#F1E0C5" />
+    <SolidColorBrush x:Key="ForgeInputBrush" Color="{StaticResource ForgeInputColor}" />
+    <SolidColorBrush x:Key="ForgeInputHoverBrush" Color="{StaticResource ForgeInputHoverColor}" />
+    <SolidColorBrush x:Key="ForgeInputDisabledBrush" Color="{StaticResource ForgeInputDisabledColor}" />
+    <SolidColorBrush x:Key="ForgeInputBorderBrush" Color="{StaticResource ForgeInputBorderColor}" />
+    <SolidColorBrush x:Key="ForgeSelectionBrush" Color="#7A263A" />
+    <SolidColorBrush x:Key="ForgeSelectionSoftBrush" Color="{StaticResource ForgeSelectionSoftColor}" />
+    <SolidColorBrush x:Key="ForgeTextBrush" Color="#24323D" />
+    <SolidColorBrush x:Key="ForgeMutedBrush" Color="#68737A" />
+    <SolidColorBrush x:Key="ForgeBorderBrush" Color="#CFC2AC" />
+    <SolidColorBrush x:Key="ForgeBorderSoftBrush" Color="#E6D9C4" />
+    <SolidColorBrush x:Key="ForgeSuccessBrush" Color="#087F5B" />
+    <SolidColorBrush x:Key="ForgeWarningBrush" Color="#B96A00" />
+    <SolidColorBrush x:Key="ForgeDangerBrush" Color="#B42332" />
+    <SolidColorBrush x:Key="ForgeDangerSoftBrush" Color="#F4D9D8" />
+
+    <!-- 覆盖 WPF UI 基础令牌，使按钮、输入框、开关、提示条等跟随同一主题。 -->
+    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="AccentFillColorPrimaryBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="{StaticResource ForgeAccentHoverColor}" />
+    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="{StaticResource ForgeAccentPressedColor}" />
+    <SolidColorBrush x:Key="AccentFillColorDisabledBrush" Color="#D9BFC2" />
+    <SolidColorBrush x:Key="AccentFillColorSelectedTextBackgroundBrush" Color="{StaticResource ForgeSelectionSoftColor}" />
+    <SolidColorBrush x:Key="AccentFillColorSelectedTextBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="AccentColorBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="AccentColorPrimaryBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="AccentColorSecondaryBrush" Color="{StaticResource ForgeAccentHoverColor}" />
+    <SolidColorBrush x:Key="AccentColorTertiaryBrush" Color="{StaticResource ForgeAccentPressedColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="{StaticResource ForgeAccentHoverColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="{StaticResource ForgeAccentPressedColor}" />
+    <SolidColorBrush x:Key="AccentTextFillColorDisabledBrush" Color="#A98B91" />
+    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#24323D" />
+    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#68737A" />
+    <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="#9B948A" />
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource ForgeInputColor}" />
+    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource ForgeInputHoverColor}" />
+    <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="#E8F0EC" />
+    <SolidColorBrush x:Key="ControlFillColorInputActiveBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ControlFillColorDisabledBrush" Color="{StaticResource ForgeInputDisabledColor}" />
+    <SolidColorBrush x:Key="ControlFillColorTransparentBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="{StaticResource ForgeInputBorderColor}" />
+    <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="#CBD5D1" />
+    <SolidColorBrush x:Key="ControlStrongFillColorDefaultBrush" Color="#123B52" />
+    <SolidColorBrush x:Key="ControlStrongStrokeColorDefaultBrush" Color="#123B52" />
+    <SolidColorBrush x:Key="ControlTextBrush" Color="#24323D" />
+    <SolidColorBrush x:Key="TextControlBorderBrush" Color="{StaticResource ForgeInputBorderColor}" />
+    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#CBD5D1" />
+    <SolidColorBrush x:Key="TextControlFocusedBorderBrush" Color="#7A263A" />
+    <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="{StaticResource ForgeInputBorderColor}" />
+    <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="{StaticResource ForgeInputBorderColor}" />
+    <SolidColorBrush x:Key="ComboBoxItemPillFillBrush" Color="{StaticResource ForgeSelectionSoftColor}" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FFF9EE" />
+    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="#F8EEDC" />
+    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#CFC2AC" />
+    <SolidColorBrush x:Key="CardStrokeColorDefaultSolidBrush" Color="#CFC2AC" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#CFC2AC" />
+    <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#E6D9C4" />
+    <SolidColorBrush x:Key="FocusStrokeColorOuterBrush" Color="#7A263A" />
+    <SolidColorBrush x:Key="FocusStrokeColorInnerBrush" Color="#FFF9EE" />
+    <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#CFC2AC" />
+    <SolidColorBrush x:Key="SurfaceStrokeColorFlyoutBrush" Color="#BFAF96" />
+    <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#FFF9EE" />
+    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#F8F0E1" />
+    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#F8F0E1" />
+    <SolidColorBrush x:Key="ApplicationBackgroundColorLightBrush" Color="#F8F0E1" />
+    <SolidColorBrush x:Key="SubtleFillColorTransparentBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#F4E7D1" />
+    <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="#EEDCC0" />
+    <SolidColorBrush x:Key="SystemFillColorSuccessBrush" Color="#087F5B" />
+    <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#B96A00" />
+    <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#B42332" />
+    <SolidColorBrush x:Key="SystemFillColorNeutralBrush" Color="#68737A" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource ForgeAccentColor}" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFF9EE" />
     <Thickness x:Key="PagePadding">28</Thickness>
-    <DropShadowEffect x:Key="ForgeModalShadow" BlurRadius="28" ShadowDepth="8" Opacity="0.28" Color="#0F172A" />
-    <Style TargetType="{x:Type controls:ForgeComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}" />
+    <DropShadowEffect x:Key="ForgeModalShadow" BlurRadius="24" ShadowDepth="6" Opacity="0.22" Color="#123B52" />
+    <Style TargetType="{x:Type controls:ForgeComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}">
+        <Setter Property="Background" Value="{StaticResource ForgeInputBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeInputBorderBrush}" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style TargetType="{x:Type ui:TextBox}" BasedOn="{StaticResource {x:Type ui:TextBox}}">
+        <Setter Property="Background" Value="{StaticResource ForgeInputBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeInputBorderBrush}" />
+        <Setter Property="MinHeight" Value="36" />
+    </Style>
+    <Style TargetType="{x:Type ui:PasswordBox}" BasedOn="{StaticResource {x:Type ui:PasswordBox}}">
+        <Setter Property="Background" Value="{StaticResource ForgeInputBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeInputBorderBrush}" />
+        <Setter Property="MinHeight" Value="36" />
+    </Style>
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceBrush}" />
+        <Setter Property="Padding" Value="10,7" />
+        <Style.Triggers>
+            <Trigger Property="IsHighlighted" Value="True"><Setter Property="Background" Value="{StaticResource ForgeSelectionSoftBrush}" /><Setter Property="Foreground" Value="{StaticResource ForgeAccentBrush}" /></Trigger>
+            <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{StaticResource ForgeSelectionSoftBrush}" /><Setter Property="Foreground" Value="{StaticResource ForgeAccentBrush}" /><Setter Property="FontWeight" Value="SemiBold" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,5" />
+    </Style>
+    <Style x:Key="ForgePickerButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Background" Value="{StaticResource ForgeInputBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeInputBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="PickerBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="PickerBorder" Property="Background" Value="{StaticResource ForgeSelectionSoftBrush}" /></Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="PickerBorder" Property="Background" Value="{StaticResource ForgeSurfaceHoverBrush}" /></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="PickerBorder" Property="BorderBrush" Value="{StaticResource ForgeAccentBrush}" /><Setter TargetName="PickerBorder" Property="BorderThickness" Value="2" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55" /><Setter Property="Cursor" Value="Arrow" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ProgressBar">
+        <Setter Property="Height" Value="8" />
+        <Setter Property="Background" Value="{StaticResource ForgeBorderSoftBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid x:Name="PART_Track" SnapsToDevicePixels="True">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" />
+                        <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}" CornerRadius="4" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="ForgeModalOverlayStyle" TargetType="Grid">
-        <Setter Property="Background" Value="#730F172A" />
+        <Setter Property="Background" Value="#73122B3B" />
         <Setter Property="Panel.ZIndex" Value="100" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
     <Style x:Key="PageTitleStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="#0F172A" />
+        <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
     </Style>
     <Style x:Key="MutedTextStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource ForgeMutedBrush}" />
@@ -37,7 +198,7 @@
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
     <Style x:Key="ForgeNavigationItemStyle" TargetType="ListBoxItem">
-        <Setter Property="Foreground" Value="#475569" />
+        <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Padding" Value="12,10" />
@@ -50,11 +211,11 @@
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="MenuItemBorder" Property="Background" Value="#EFF6FF" /></Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="MenuItemBorder" Property="Background" Value="{StaticResource ForgeSelectionSoftBrush}" /><Setter Property="Foreground" Value="{StaticResource ForgeAccentBrush}" /></Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
+                            <Setter Property="Foreground" Value="White" />
                             <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter TargetName="MenuItemBorder" Property="Background" Value="#DBEAFE" />
+                            <Setter TargetName="MenuItemBorder" Property="Background" Value="{StaticResource ForgeSelectionBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -62,18 +223,39 @@
         </Setter>
     </Style>
     <Style x:Key="ForgeTableSurfaceStyle" TargetType="Border">
-        <Setter Property="Background" Value="White" />
-        <Setter Property="BorderBrush" Value="#E2E8F0" />
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Padding" Value="1" />
         <Setter Property="VerticalAlignment" Value="Top" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
+    <Style x:Key="ForgeSidePanelStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+    <Style x:Key="ForgeInsetSurfaceStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceAltBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeBorderSoftBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style x:Key="ForgeConfirmationBarStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ForgeSelectionSoftBrush}" />
+        <Setter Property="BorderBrush" Value="#C78E96" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="14" />
+    </Style>
     <Style x:Key="ForgeDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
-        <Setter Property="Background" Value="#F8FAFC" />
-        <Setter Property="Foreground" Value="#334155" />
-        <Setter Property="BorderBrush" Value="#E2E8F0" />
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceAltBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgePrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeBorderBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -84,8 +266,8 @@
     </Style>
     <Style x:Key="ForgeDataGridCellStyle" TargetType="DataGridCell">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="#334155" />
-        <Setter Property="BorderBrush" Value="#EEF2F7" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ForgeBorderSoftBrush}" />
         <Setter Property="BorderThickness" Value="0,0,0,1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -134,18 +316,18 @@
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
                             <MultiTrigger.Conditions><Condition Property="IsEnabled" Value="True" /><Condition Property="IsMouseOver" Value="True" /></MultiTrigger.Conditions>
-                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#B91C1C" />
-                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#B91C1C" />
+                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#941F31" />
+                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#941F31" />
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions><Condition Property="IsEnabled" Value="True" /><Condition Property="IsPressed" Value="True" /></MultiTrigger.Conditions>
-                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#991B1B" />
-                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#991B1B" />
+                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#7A1828" />
+                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#7A1828" />
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="#FEE2E2" />
-                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#FCA5A5" />
-                            <Setter Property="Foreground" Value="#991B1B" />
+                            <Setter TargetName="DangerButtonBorder" Property="Background" Value="{StaticResource ForgeDangerSoftBrush}" />
+                            <Setter TargetName="DangerButtonBorder" Property="BorderBrush" Value="#D7A5A5" />
+                            <Setter Property="Foreground" Value="#7A1828" />
                             <Setter Property="Cursor" Value="Arrow" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -164,8 +346,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
                     <Grid Width="36" Height="20">
-                        <Border x:Name="SwitchTrack" Background="#CBD5E1" CornerRadius="10" />
-                        <Ellipse x:Name="SwitchThumb" Width="16" Height="16" Margin="2" Fill="White" HorizontalAlignment="Left">
+                        <Border x:Name="SwitchTrack" Background="{StaticResource ForgeBorderBrush}" CornerRadius="10" />
+                        <Ellipse x:Name="SwitchThumb" Width="16" Height="16" Margin="2" Fill="{StaticResource ForgeSurfaceBrush}" HorizontalAlignment="Left">
                             <Ellipse.Effect>
                                 <DropShadowEffect BlurRadius="3" ShadowDepth="1" Opacity="0.18" />
                             </Ellipse.Effect>
@@ -173,7 +355,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="SwitchTrack" Property="Background" Value="{StaticResource ForgePrimaryBrush}" />
+                            <Setter TargetName="SwitchTrack" Property="Background" Value="{StaticResource ForgeAccentBrush}" />
                             <Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55" /></Trigger>
@@ -183,23 +365,23 @@
         </Setter>
     </Style>
     <Style x:Key="ForgeDataGridRowStyle" TargetType="DataGridRow">
-        <Setter Property="Background" Value="White" />
-        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
         <Setter Property="MinHeight" Value="42" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Style.Triggers>
-            <Trigger Property="AlternationIndex" Value="1"><Setter Property="Background" Value="#FBFDFF" /></Trigger>
-            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#F1F5F9" /></Trigger>
+            <Trigger Property="AlternationIndex" Value="1"><Setter Property="Background" Value="#FCF3E5" /></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{StaticResource ForgeSurfaceHoverBrush}" /></Trigger>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="#E8F1FF" />
-                <Setter Property="Foreground" Value="#1D4ED8" />
+                <Setter Property="Background" Value="{StaticResource ForgeSelectionSoftBrush}" />
+                <Setter Property="Foreground" Value="{StaticResource ForgeAccentBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>
     <Style x:Key="ForgeTopTableStyle" TargetType="DataGrid">
-        <Setter Property="Background" Value="White" />
-        <Setter Property="Foreground" Value="#334155" />
+        <Setter Property="Background" Value="{StaticResource ForgeSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource ForgeTextBrush}" />
         <Setter Property="VerticalAlignment" Value="Top" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="ColumnHeaderStyle" Value="{StaticResource ForgeDataGridColumnHeaderStyle}" />

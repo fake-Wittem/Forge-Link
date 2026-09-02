@@ -38,7 +38,11 @@ public sealed class HistoryTrendChart : FrameworkElement
     {
         base.OnRender(drawingContext);
         Rect area = new(0, 0, ActualWidth, ActualHeight);
-        drawingContext.DrawRoundedRectangle(Brushes.White, new Pen(new SolidColorBrush(Color.FromRgb(226, 232, 240)), 1), area, 8, 8);
+        Brush surfaceBrush = ResolveBrush("ForgeSurfaceBrush", Color.FromRgb(255, 249, 238));
+        Brush borderBrush = ResolveBrush("ForgeBorderBrush", Color.FromRgb(207, 194, 172));
+        Brush mutedBrush = ResolveBrush("ForgeMutedBrush", Color.FromRgb(104, 115, 122));
+        Brush primaryBrush = ResolveBrush("ForgePrimaryBrush", Color.FromRgb(18, 59, 82));
+        drawingContext.DrawRoundedRectangle(surfaceBrush, new Pen(borderBrush, 1), area, 6, 6);
         List<(DateTimeOffset Time, double Value)> points = Values?
             .Where(static value => value.EngineeringValue is not null && value.Quality == DataQuality.Good)
             .Select(static value => TryDouble(value.EngineeringValue, out double number)
@@ -49,7 +53,7 @@ public sealed class HistoryTrendChart : FrameworkElement
             .OrderBy(static item => item.Time).ToList() ?? [];
         if (points.Count < 2)
         {
-            DrawText(drawingContext, "至少需要 2 个有效数值点才能绘制趋势", new Point(20, Math.Max(20, ActualHeight / 2 - 8)), Brushes.SlateGray);
+            DrawText(drawingContext, "至少需要 2 个有效数值点才能绘制趋势", new Point(20, Math.Max(20, ActualHeight / 2 - 8)), mutedBrush);
             return;
         }
 
@@ -73,15 +77,19 @@ public sealed class HistoryTrendChart : FrameworkElement
             }
         }
         geometry.Freeze();
-        Pen axis = new(new SolidColorBrush(Color.FromRgb(203, 213, 225)), 1);
+        Pen axis = new(borderBrush, 1);
         drawingContext.DrawLine(axis, new(left, top), new(left, bottom));
         drawingContext.DrawLine(axis, new(left, bottom), new(right, bottom));
-        drawingContext.DrawGeometry(null, new Pen(new SolidColorBrush(Color.FromRgb(37, 99, 235)), 2), geometry);
-        DrawText(drawingContext, maximum.ToString("0.###", CultureInfo.CurrentCulture), new Point(8, top - 8), Brushes.SlateGray);
-        DrawText(drawingContext, minimum.ToString("0.###", CultureInfo.CurrentCulture), new Point(8, bottom - 8), Brushes.SlateGray);
-        DrawText(drawingContext, points[0].Time.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture), new Point(left, bottom + 8), Brushes.SlateGray);
-        DrawText(drawingContext, points[^1].Time.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture), new Point(Math.Max(left, right - 54), bottom + 8), Brushes.SlateGray);
+        drawingContext.DrawGeometry(null, new Pen(primaryBrush, 2), geometry);
+        DrawText(drawingContext, maximum.ToString("0.###", CultureInfo.CurrentCulture), new Point(8, top - 8), mutedBrush);
+        DrawText(drawingContext, minimum.ToString("0.###", CultureInfo.CurrentCulture), new Point(8, bottom - 8), mutedBrush);
+        DrawText(drawingContext, points[0].Time.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture), new Point(left, bottom + 8), mutedBrush);
+        DrawText(drawingContext, points[^1].Time.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture), new Point(Math.Max(left, right - 54), bottom + 8), mutedBrush);
     }
+
+    /// <summary>从全局主题读取画刷，并在资源缺失时使用同色系安全回退值。</summary>
+    private Brush ResolveBrush(string resourceKey, Color fallbackColor) =>
+        TryFindResource(resourceKey) as Brush ?? new SolidColorBrush(fallbackColor);
 
     private void DrawText(DrawingContext context, string text, Point origin, Brush brush) => context.DrawText(
         new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,

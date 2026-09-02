@@ -9,14 +9,14 @@
         <ui:InfoBar Grid.Row="1" Margin="0,0,0,12" Title="刷新失败" Message="{Binding ErrorMessage}" Severity="Warning" IsOpen="{Binding ErrorMessage, Converter={StaticResource StringVisibility}}" />
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions><ColumnDefinition Width="210" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-            <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,12,0" VerticalAlignment="Top">
+            <Border Style="{StaticResource ForgeSidePanelStyle}" Margin="0,0,12,0">
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                    <TextBlock Text="设备" FontWeight="SemiBold" Foreground="#334155" Margin="4,2,4,8" />
+                    <TextBlock Text="设备" FontWeight="SemiBold" Foreground="{StaticResource ForgePrimaryBrush}" Margin="4,2,4,8" />
                     <ListBox Grid.Row="1" ItemsSource="{Binding DeviceFilters}" SelectedItem="{Binding SelectedDeviceFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="220" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding Device.Name}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
                     </ListBox>
-                    <TextBlock Grid.Row="2" Text="点位分组" FontWeight="SemiBold" Foreground="#334155" Margin="4,18,4,8" />
+                    <TextBlock Grid.Row="2" Text="点位分组" FontWeight="SemiBold" Foreground="{StaticResource ForgePrimaryBrush}" Margin="4,18,4,8" />
                     <ListBox Grid.Row="3" ItemsSource="{Binding PointGroupFilters}" SelectedItem="{Binding SelectedPointGroupFilter}" Style="{StaticResource ForgeNavigationListStyle}" ItemContainerStyle="{StaticResource ForgeNavigationItemStyle}" MaxHeight="260" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate><DataTemplate><DockPanel><TextBlock DockPanel.Dock="Right" Text="{Binding PointCount}" Foreground="{StaticResource ForgeMutedBrush}" Margin="8,0,0,0" /><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" /></DockPanel></DataTemplate></ListBox.ItemTemplate>
                     </ListBox>

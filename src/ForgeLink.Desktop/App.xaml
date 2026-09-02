@@ -1,5 +1,5 @@
 <!--
-  文件说明：声明桌面应用入口并加载 WPF UI 明亮主题资源。
+  文件说明：声明桌面应用入口并加载 WPF UI 与 ForgeLink 复古工业明亮主题资源。
   责任边界：只配置全局资源与启动窗口，不包含业务逻辑。
 -->
 <Application x:Class="ForgeLink.Desktop.App"
